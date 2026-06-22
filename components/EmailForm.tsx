@@ -1,6 +1,6 @@
 "use client";
 
-import { FormData, FormatData, FormatType, FORMAT_LABELS, DEFAULT_FORM } from "@/lib/types";
+import { FormData, FormatData, FormatType, FORMAT_LABELS } from "@/lib/types";
 
 const FORMAT_OPTIONS: FormatType[] = ["kurzerklart", "360grad", "insights", "sprachnachricht"];
 
