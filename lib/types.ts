@@ -56,10 +56,8 @@ export interface FormData {
 
   schulvermarktung: boolean;
   svGebiet: SvGebiet;
-  svLaufzeit: string;
 
   anhang: boolean;
-  anhangText: string;
   formalAngebot: boolean;
   followUp: boolean;
   followUpDatum: string;
@@ -78,10 +76,8 @@ export const DEFAULT_FORM: FormData = {
 
   schulvermarktung: true,
   svGebiet: "regional",
-  svLaufzeit: "",
 
   anhang: false,
-  anhangText: "Alleinstellungsmerkmale",
   formalAngebot: true,
   followUp: false,
   followUpDatum: "",

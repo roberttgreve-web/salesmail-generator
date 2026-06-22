@@ -12,6 +12,7 @@ import {
   Unterschrift,
 } from "@/lib/types";
 
+
 const FORMAT_OPTIONS: FormatType[] = ["sprachnachricht", "kurzerklart", "360grad"];
 
 interface Props {
@@ -266,14 +267,6 @@ export default function EmailForm({ data, onChange }: Props) {
               </div>
             </Field>
 
-            <Field label="Vertragslaufzeit (optional)">
-              <input
-                type="text"
-                placeholder="z.B. 1 Jahr"
-                value={data.svLaufzeit}
-                onChange={(e) => set("svLaufzeit", e.target.value)}
-              />
-            </Field>
           </>
         )}
       </div>
@@ -287,19 +280,13 @@ export default function EmailForm({ data, onChange }: Props) {
             <input
               type="checkbox"
               checked={data.anhang}
-              onChange={(e) => set("anhang", e.target.checked)}
+              onChange={(e) => {
+                set("anhang", e.target.checked);
+                if (e.target.checked) set("formalAngebot", false);
+              }}
             />
             <span className="text-sm font-medium">Anhang erwähnen</span>
           </label>
-          {data.anhang && (
-            <input
-              type="text"
-              className="mt-1.5"
-              placeholder="z.B. Alleinstellungsmerkmale"
-              value={data.anhangText}
-              onChange={(e) => set("anhangText", e.target.value)}
-            />
-          )}
         </div>
 
         <div className="mb-3">
@@ -307,7 +294,10 @@ export default function EmailForm({ data, onChange }: Props) {
             <input
               type="checkbox"
               checked={data.formalAngebot}
-              onChange={(e) => set("formalAngebot", e.target.checked)}
+              onChange={(e) => {
+                set("formalAngebot", e.target.checked);
+                if (e.target.checked) set("anhang", false);
+              }}
             />
             <span className="text-sm font-medium">Formelles Angebot anbieten</span>
           </label>
