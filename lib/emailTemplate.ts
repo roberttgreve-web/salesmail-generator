@@ -95,9 +95,10 @@ function buildBerufsmediumSection(formate: FormatData[], p: P): string {
         `${bullet}Mit **#kurzerklärt** präsentieren wir einen Ausbildungsberuf auf unterhaltsame, moderne und kompakte Weise. Wir begleiten den gesamten Produktionsprozess – vom Kickoff über das Drehbuch bis hin zu Schnitt und Vertonung.`
       );
       if (f.beispielTitel) {
-        const ex = f.beispielLink
-          ? `[${f.beispielTitel}](${f.beispielLink})`
-          : f.beispielTitel;
+        const url = f.beispielLink
+          ? (f.beispielLink.startsWith("http") ? f.beispielLink : `https://${f.beispielLink}`)
+          : "";
+        const ex = url ? `[${f.beispielTitel}](${url})` : f.beispielTitel;
         lines.push(`--> Hier eine Beispielproduktion: ${ex}`);
       }
       lines.push("");
@@ -107,9 +108,10 @@ function buildBerufsmediumSection(formate: FormatData[], p: P): string {
         `${bullet}Mit einem aufregenden **360-Grad-Rundgang** ${p.gebenGebt} ${p.SieIhr} Schüler*innen authentische Einblicke in ${p.IhreEure} Ausbildungs- und Betriebsräume.`
       );
       if (f.beispielTitel) {
-        const ex = f.beispielLink
-          ? `[${f.beispielTitel}](${f.beispielLink})`
-          : f.beispielTitel;
+        const url = f.beispielLink
+          ? (f.beispielLink.startsWith("http") ? f.beispielLink : `https://${f.beispielLink}`)
+          : "";
+        const ex = url ? `[${f.beispielTitel}](${url})` : f.beispielTitel;
         lines.push(`--> Hier eine Beispielproduktion: ${ex}`);
       }
       lines.push("");

@@ -108,25 +108,13 @@ function formatHtmlLine(line: string): string {
   return inlineToHtml(line);
 }
 
-// Groups consecutive non-empty lines into <p> blocks so Outlook gets
-// exactly one paragraph break per blank line (no double spacing).
+// Each non-empty line gets a trailing <br>; empty lines become a lone <br>.
+// Result: one blank line in source → exactly <br><br> in HTML → one paragraph
+// break in Outlook (no double spacing, no missing spacing).
 function generateHtml(text: string): string {
-  const lines = text.split("\n");
-  const blocks: string[][] = [];
-  let current: string[] = [];
-
-  for (const line of lines) {
-    if (!line) {
-      if (current.length > 0) { blocks.push(current); current = []; }
-    } else {
-      current.push(line);
-    }
-  }
-  if (current.length > 0) blocks.push(current);
-
-  const style = `margin:0 0 14px 0;font-family:Arial,sans-serif;font-size:14px;line-height:1.5`;
-  return blocks
-    .map((block) => `<p style="${style}">${block.map(formatHtmlLine).join("<br>")}</p>`)
+  return text
+    .split("\n")
+    .map((line) => (line ? formatHtmlLine(line) + "<br>" : "<br>"))
     .join("");
 }
 

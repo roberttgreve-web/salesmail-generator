@@ -262,7 +262,7 @@ export default function EmailForm({ data, onChange }: Props) {
                 onChange({ ...data, anhang: e.target.checked, formalAngebot: e.target.checked ? false : data.formalAngebot })
               }
             />
-            <span className="text-sm font-medium">Anhang erwähnen</span>
+            <span className="text-sm font-medium">Angebot im Anhang</span>
           </label>
         </div>
 
@@ -275,7 +275,7 @@ export default function EmailForm({ data, onChange }: Props) {
                 onChange({ ...data, formalAngebot: e.target.checked, anhang: e.target.checked ? false : data.anhang })
               }
             />
-            <span className="text-sm font-medium">Formelles Angebot anbieten</span>
+            <span className="text-sm font-medium">Kein Angebot im Anhang. Anbieten.</span>
           </label>
         </div>
 
