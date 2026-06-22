@@ -66,7 +66,7 @@ function renderEmailLines(text: string): React.ReactNode[] {
     if (!line) return <div key={i} className="h-3" />;
     const trimmed = line.trim();
     if (BOLD_HEADERS.has(trimmed)) {
-      return <div key={i} className="font-bold">{line}</div>;
+      return <div key={i} className="font-bold text-base">{line}</div>;
     }
     if (BOLD_ITALIC_NAMES.has(trimmed)) {
       return <div key={i}><strong><em>{line}</em></strong></div>;
@@ -103,7 +103,7 @@ function inlineToHtml(line: string): string {
 
 function formatHtmlLine(line: string): string {
   const trimmed = line.trim();
-  if (BOLD_HEADERS.has(trimmed)) return `<strong>${escHtml(line)}</strong>`;
+  if (BOLD_HEADERS.has(trimmed)) return `<strong style="font-size:16px">${escHtml(line)}</strong>`;
   if (BOLD_ITALIC_NAMES.has(trimmed)) return `<strong><em>${escHtml(line)}</em></strong>`;
   return inlineToHtml(line);
 }

@@ -86,7 +86,7 @@ function buildBerufsmediumSection(formate: FormatData[], p: P): string {
   formate.forEach((f) => {
     if (f.type === "sprachnachricht") {
       lines.push(
-        `${bullet}${p.IhrEuer} Beruf wird bei uns lebendig und authentisch dargestellt – durch eine **Sprachnachricht** ${p.IhrerEurer} Auszubildenden und interaktive **Mini-Games**. Die Vertonung kann entweder direkt durch eine oder einen ${p.IhrerEurer} Auszubildenden erfolgen oder alternativ KI-gestützt produziert werden.`
+        `${bullet}Durch eine **Sprachnachricht** und interaktive **Mini-Games** wird ${p.IhrEuer} Beruf bei uns lebendig und authentisch dargestellt. Die Vertonung kann entweder direkt durch eine oder einen ${p.IhrerEurer} Auszubildenden erfolgen oder alternativ KI-gestützt produziert werden.`
       );
       lines.push("");
     }
@@ -118,7 +118,8 @@ function buildBerufsmediumSection(formate: FormatData[], p: P): string {
     }
   });
 
-  return lines.join("\n");
+  // trim trailing blank lines so no extra spacing before next section
+  return lines.join("\n").replace(/\n+$/, "");
 }
 
 function buildSVSection(gebiet: SvGebiet, p: P): string {
@@ -249,7 +250,7 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
     lines.push(`Ich freue mich auf unser Follow-up am ${termin}.`);
   } else {
     lines.push("");
-    lines.push(`Bei weiteren Fragen stehe ich ${p.IhnenDir} jederzeit gern zur Verfügung.`);
+    lines.push(`Bei weiteren Fragen stehe ich ${p.IhnenDir} jederzeit zur Verfügung.`);
   }
 
   lines.push("");
