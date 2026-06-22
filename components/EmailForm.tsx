@@ -1,8 +1,18 @@
 "use client";
 
-import { FormData, FormatData, FormatType, FORMAT_LABELS } from "@/lib/types";
+import {
+  FormData,
+  FormatData,
+  FormatType,
+  FORMAT_LABELS,
+  Person,
+  SV_GEBIET_LABELS,
+  SvGebiet,
+  UNTERSCHRIFTEN,
+  Unterschrift,
+} from "@/lib/types";
 
-const FORMAT_OPTIONS: FormatType[] = ["kurzerklart", "360grad", "insights", "sprachnachricht"];
+const FORMAT_OPTIONS: FormatType[] = ["sprachnachricht", "kurzerklart", "360grad"];
 
 interface Props {
   data: FormData;
@@ -32,27 +42,35 @@ export default function EmailForm({ data, onChange }: Props) {
     onChange({ ...data, [key]: value });
   }
 
-  function setName(idx: number, value: string) {
-    const namen = [...data.namen] as [string, string, string];
-    namen[idx] = value;
-    set("namen", namen);
+  // Personen
+  function addPerson() {
+    if (data.personen.length >= 5) return;
+    set("personen", [
+      ...data.personen,
+      { vorname: "", nachname: "", geschlecht: "weiblich" },
+    ]);
   }
 
+  function removePerson(idx: number) {
+    set("personen", data.personen.filter((_, i) => i !== idx));
+  }
+
+  function updatePerson(idx: number, key: keyof Person, value: string) {
+    set(
+      "personen",
+      data.personen.map((p, i) => (i === idx ? { ...p, [key]: value } : p))
+    );
+  }
+
+  // Formate
   function toggleFormat(type: FormatType) {
     const exists = data.formate.find((f) => f.type === type);
     if (exists) {
       set("formate", data.formate.filter((f) => f.type !== type));
     } else {
-      const newFormat: FormatData = {
-        type,
-        beispielTitel: "",
-        beispielLink: "",
-        preisProduktion: "",
-        preisProduktion2: "",
-      };
-      // maintain order
-      const ordered = FORMAT_OPTIONS.map((t) =>
-        data.formate.find((f) => f.type === t) || (t === type ? newFormat : null)
+      const newFormat: FormatData = { type, beispielTitel: "", beispielLink: "" };
+      const ordered = FORMAT_OPTIONS.map(
+        (t) => data.formate.find((f) => f.type === t) || (t === type ? newFormat : null)
       ).filter(Boolean) as FormatData[];
       set("formate", ordered);
     }
@@ -65,81 +83,90 @@ export default function EmailForm({ data, onChange }: Props) {
     );
   }
 
-  const activeNames = data.namen.filter((n) => n.trim()).length;
-
   return (
-    <div className="h-full overflow-y-auto p-4" style={{ width: "100%" }}>
+    <div className="h-full overflow-y-auto p-4">
+
       {/* Sektion 1: Ansprache */}
       <div className="bg-white rounded-lg p-4 mb-3 shadow-sm">
         <SectionHeader num={1} label="Ansprache" />
 
         <Field label="Anrede">
           <div className="flex gap-2">
-            <label className="flex items-center gap-1.5 cursor-pointer" style={{ marginBottom: 0 }}>
-              <input
-                type="radio"
-                name="anrede"
-                checked={data.anredeSiezen}
-                onChange={() => set("anredeSiezen", true)}
-              />
-              <span className="text-sm">Siezen</span>
-            </label>
-            <label className="flex items-center gap-1.5 cursor-pointer" style={{ marginBottom: 0 }}>
-              <input
-                type="radio"
-                name="anrede"
-                checked={!data.anredeSiezen}
-                onChange={() => set("anredeSiezen", false)}
-              />
-              <span className="text-sm">Duzen</span>
-            </label>
+            {(["Siezen", "Duzen"] as const).map((opt) => (
+              <label key={opt} className="flex items-center gap-1.5 cursor-pointer" style={{ marginBottom: 0 }}>
+                <input
+                  type="radio"
+                  name="anrede"
+                  checked={opt === "Siezen" ? data.anredeSiezen : !data.anredeSiezen}
+                  onChange={() => set("anredeSiezen", opt === "Siezen")}
+                />
+                <span className="text-sm">{opt}</span>
+              </label>
+            ))}
           </div>
         </Field>
 
-        <Field label="Anredeform">
-          <select
-            value={data.anredePraefix}
-            onChange={(e) => set("anredePraefix", e.target.value as FormData["anredePraefix"])}
+        <div className="space-y-3">
+          {data.personen.map((person, idx) => (
+            <div key={idx} className="border border-gray-200 rounded-md p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">
+                  Person {idx + 1}
+                </span>
+                {data.personen.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removePerson(idx)}
+                    className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    Entfernen
+                  </button>
+                )}
+              </div>
+
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  placeholder="Vorname"
+                  value={person.vorname}
+                  onChange={(e) => updatePerson(idx, "vorname", e.target.value)}
+                  style={{ width: "50%" }}
+                />
+                <input
+                  type="text"
+                  placeholder="Nachname"
+                  value={person.nachname}
+                  onChange={(e) => updatePerson(idx, "nachname", e.target.value)}
+                  style={{ width: "50%" }}
+                />
+              </div>
+
+              <div className="flex gap-3">
+                {(["weiblich", "maennlich"] as const).map((g) => (
+                  <label key={g} className="flex items-center gap-1.5 cursor-pointer" style={{ marginBottom: 0 }}>
+                    <input
+                      type="radio"
+                      name={`geschlecht-${idx}`}
+                      checked={person.geschlecht === g}
+                      onChange={() => updatePerson(idx, "geschlecht", g)}
+                    />
+                    <span className="text-sm">{g === "weiblich" ? "Weiblich" : "Männlich"}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {data.personen.length < 5 && (
+          <button
+            type="button"
+            onClick={addPerson}
+            className="mt-2 text-xs px-3 py-1.5 rounded border border-gray-300 bg-white hover:bg-gray-50 text-gray-600 transition-colors"
           >
-            <option value="Liebe">Liebe</option>
-            <option value="Lieber">Lieber</option>
-            <option value="Liebe/r">Liebe/r</option>
-          </select>
-        </Field>
-
-        <Field label="Name(n) Ansprechpartner*in">
-          <input
-            type="text"
-            placeholder="z.B. Frau Ritzinger-Roll"
-            value={data.namen[0]}
-            onChange={(e) => setName(0, e.target.value)}
-            className="mb-1"
-          />
-          <input
-            type="text"
-            placeholder="2. Person (optional)"
-            value={data.namen[1]}
-            onChange={(e) => setName(1, e.target.value)}
-            className="mb-1"
-          />
-          {(activeNames >= 2 || data.namen[1]) && (
-            <input
-              type="text"
-              placeholder="3. Person (optional)"
-              value={data.namen[2]}
-              onChange={(e) => setName(2, e.target.value)}
-            />
-          )}
-        </Field>
-
-        <Field label="Unternehmen / Organisation">
-          <input
-            type="text"
-            placeholder="z.B. JELBA GmbH"
-            value={data.unternehmen}
-            onChange={(e) => set("unternehmen", e.target.value)}
-          />
-        </Field>
+            + Person hinzufügen
+          </button>
+        )}
       </div>
 
       {/* Sektion 2: Formate */}
@@ -172,40 +199,22 @@ export default function EmailForm({ data, onChange }: Props) {
               {FORMAT_LABELS[format.type]}
             </div>
 
-            <Field label="Beispielmedium – Berufsbezeichnung / Titel">
-              <input
-                type="text"
-                placeholder="z.B. Fachkraft für Lagerlogistik (DSV)"
-                value={format.beispielTitel}
-                onChange={(e) => updateFormat(format.type, "beispielTitel", e.target.value)}
-              />
-            </Field>
-
-            <Field label="Beispielmedium – Link (URL)">
-              <input
-                type="url"
-                placeholder="https://..."
-                value={format.beispielLink}
-                onChange={(e) => updateFormat(format.type, "beispielLink", e.target.value)}
-              />
-            </Field>
-
             {format.type !== "sprachnachricht" && (
               <>
-                <Field label="Preis Produktion (einmalig) €">
+                <Field label="Beispielmedium – Berufsbezeichnung / Titel">
                   <input
                     type="text"
-                    placeholder="z.B. 4.900"
-                    value={format.preisProduktion}
-                    onChange={(e) => updateFormat(format.type, "preisProduktion", e.target.value)}
+                    placeholder="z.B. Fachkraft für Lagerlogistik (DSV)"
+                    value={format.beispielTitel}
+                    onChange={(e) => updateFormat(format.type, "beispielTitel", e.target.value)}
                   />
                 </Field>
-                <Field label="2. Preisvariante (optional, z.B. ohne Schulprogramm) €">
+                <Field label="Link (URL) von DET einfügen">
                   <input
-                    type="text"
-                    placeholder="z.B. 6.900"
-                    value={format.preisProduktion2}
-                    onChange={(e) => updateFormat(format.type, "preisProduktion2", e.target.value)}
+                    type="url"
+                    placeholder="https://..."
+                    value={format.beispielLink}
+                    onChange={(e) => updateFormat(format.type, "beispielLink", e.target.value)}
                   />
                 </Field>
               </>
@@ -222,49 +231,39 @@ export default function EmailForm({ data, onChange }: Props) {
       <div className="bg-white rounded-lg p-4 mb-3 shadow-sm">
         <SectionHeader num={3} label="Schulvermarktung" />
 
-        <div className="flex items-center gap-3 mb-3">
-          <button
-            type="button"
-            onClick={() => set("schulvermarktung", true)}
-            className={`text-xs px-3 py-1.5 rounded border transition-colors ${
-              data.schulvermarktung
-                ? "bg-[#111116] text-white border-[#111116]"
-                : "bg-white text-gray-600 border-gray-300"
-            }`}
-          >
-            Ja, inkl. Schulprogramm
-          </button>
-          <button
-            type="button"
-            onClick={() => set("schulvermarktung", false)}
-            className={`text-xs px-3 py-1.5 rounded border transition-colors ${
-              !data.schulvermarktung
-                ? "bg-[#111116] text-white border-[#111116]"
-                : "bg-white text-gray-600 border-gray-300"
-            }`}
-          >
-            Nein
-          </button>
+        <div className="flex gap-2 mb-3">
+          {([true, false] as const).map((val) => (
+            <button
+              key={String(val)}
+              type="button"
+              onClick={() => set("schulvermarktung", val)}
+              className={`text-xs px-3 py-1.5 rounded border transition-colors ${
+                data.schulvermarktung === val
+                  ? "bg-[#111116] text-white border-[#111116]"
+                  : "bg-white text-gray-600 border-gray-300"
+              }`}
+            >
+              {val ? "Ja, inkl. Schulprogramm" : "Nein"}
+            </button>
+          ))}
         </div>
 
         {data.schulvermarktung && (
           <>
             <Field label="Gebiet">
-              <input
-                type="text"
-                placeholder="z.B. bundesweit / ganz NRW / 50-km-Radius um Berlin"
-                value={data.svGebiet}
-                onChange={(e) => set("svGebiet", e.target.value)}
-              />
-            </Field>
-
-            <Field label="Preis Schulprogramm (jährlich) €">
-              <input
-                type="text"
-                placeholder="z.B. 4.500"
-                value={data.svPreis}
-                onChange={(e) => set("svPreis", e.target.value)}
-              />
+              <div className="space-y-1.5 mt-1">
+                {(Object.keys(SV_GEBIET_LABELS) as SvGebiet[]).map((gebiet) => (
+                  <label key={gebiet} className="flex items-center gap-2 cursor-pointer" style={{ marginBottom: 0 }}>
+                    <input
+                      type="radio"
+                      name="svGebiet"
+                      checked={data.svGebiet === gebiet}
+                      onChange={() => set("svGebiet", gebiet)}
+                    />
+                    <span className="text-sm">{SV_GEBIET_LABELS[gebiet]}</span>
+                  </label>
+                ))}
+              </div>
             </Field>
 
             <Field label="Vertragslaufzeit (optional)">
@@ -273,36 +272,6 @@ export default function EmailForm({ data, onChange }: Props) {
                 placeholder="z.B. 1 Jahr"
                 value={data.svLaufzeit}
                 onChange={(e) => set("svLaufzeit", e.target.value)}
-              />
-            </Field>
-
-            <Field label="Instrumente erwähnen">
-              <div className="flex gap-4 mt-1">
-                <label className="flex items-center gap-1.5 cursor-pointer" style={{ marginBottom: 0 }}>
-                  <input
-                    type="checkbox"
-                    checked={data.svMedienbox}
-                    onChange={(e) => set("svMedienbox", e.target.checked)}
-                  />
-                  <span className="text-sm">Medienbox</span>
-                </label>
-                <label className="flex items-center gap-1.5 cursor-pointer" style={{ marginBottom: 0 }}>
-                  <input
-                    type="checkbox"
-                    checked={data.svVideostunde}
-                    onChange={(e) => set("svVideostunde", e.target.checked)}
-                  />
-                  <span className="text-sm">Videostunde</span>
-                </label>
-              </div>
-            </Field>
-
-            <Field label="Schulen / Arbeitsagenturen (optional, z.B. ‚XXX Schulen + 43 Arbeitsagenturen')">
-              <input
-                type="text"
-                placeholder="z.B. XXX Schulen + 43 Arbeitsagenturen in NRW"
-                value={data.svSchulenInfo}
-                onChange={(e) => set("svSchulenInfo", e.target.value)}
               />
             </Field>
           </>
@@ -333,7 +302,7 @@ export default function EmailForm({ data, onChange }: Props) {
           )}
         </div>
 
-        <div>
+        <div className="mb-3">
           <label className="flex items-center gap-2 cursor-pointer" style={{ marginBottom: 0 }}>
             <input
               type="checkbox"
@@ -343,39 +312,53 @@ export default function EmailForm({ data, onChange }: Props) {
             <span className="text-sm font-medium">Formelles Angebot anbieten</span>
           </label>
         </div>
+
+        <div>
+          <label className="flex items-center gap-2 cursor-pointer" style={{ marginBottom: 0 }}>
+            <input
+              type="checkbox"
+              checked={data.followUp}
+              onChange={(e) => set("followUp", e.target.checked)}
+            />
+            <span className="text-sm font-medium">Follow-up Termin nennen</span>
+          </label>
+          {data.followUp && (
+            <div className="flex gap-2 mt-1.5">
+              <input
+                type="text"
+                placeholder="Datum (z.B. 6.7.)"
+                value={data.followUpDatum}
+                onChange={(e) => set("followUpDatum", e.target.value)}
+                style={{ width: "50%" }}
+              />
+              <input
+                type="text"
+                placeholder="Uhrzeit (z.B. 10:00)"
+                value={data.followUpUhrzeit}
+                onChange={(e) => set("followUpUhrzeit", e.target.value)}
+                style={{ width: "50%" }}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Sektion 5: Abschluss */}
       <div className="bg-white rounded-lg p-4 mb-3 shadow-sm">
         <SectionHeader num={5} label="Abschluss" />
 
-        <Field label="Follow-up Termin (optional — ersetzt 'Bei weiteren Fragen...')">
-          <input
-            type="text"
-            placeholder="z.B. 6.7. um 10:00 Uhr"
-            value={data.followUpText}
-            onChange={(e) => set("followUpText", e.target.value)}
-          />
-        </Field>
-
-        <Field label="Grußzeile">
+        <Field label="Unterschrift">
           <select
-            value={data.grusszeile}
-            onChange={(e) => set("grusszeile", e.target.value as FormData["grusszeile"])}
+            value={data.unterschrift}
+            onChange={(e) => set("unterschrift", e.target.value as Unterschrift)}
           >
-            <option value="standard">Viele Grüße</option>
-            <option value="berlin">Viele Grüße aus Berlin</option>
+            {UNTERSCHRIFTEN.map((name) => (
+              <option key={name} value={name}>{name}</option>
+            ))}
           </select>
         </Field>
-
-        <Field label="Unterschrift">
-          <input
-            type="text"
-            value={data.unterschrift}
-            onChange={(e) => set("unterschrift", e.target.value)}
-          />
-        </Field>
       </div>
+
     </div>
   );
 }

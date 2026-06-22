@@ -1,74 +1,91 @@
-export type FormatType = "kurzerklart" | "360grad" | "insights" | "sprachnachricht";
+export type FormatType = "kurzerklart" | "360grad" | "sprachnachricht";
 
 export const FORMAT_LABELS: Record<FormatType, string> = {
   kurzerklart: "#kurzerklärt",
-  "360grad": "360-Grad",
-  insights: "Insights",
-  sprachnachricht: "Sprachnachricht & Mini-Games",
+  "360grad": "360-Grad-Rundgang",
+  sprachnachricht: "Sprachnachricht / Mini-Games",
 };
+
+export const PRODUKTION_PREISE: Record<FormatType, number> = {
+  kurzerklart: 4900,
+  "360grad": 13900,
+  sprachnachricht: 0,
+};
+
+export type SvGebiet = "regional" | "bundesland" | "bundesweit";
+
+export const SV_PREISE: Record<SvGebiet, number> = {
+  regional: 4500,
+  bundesland: 6500,
+  bundesweit: 9500,
+};
+
+export const SV_GEBIET_LABELS: Record<SvGebiet, string> = {
+  regional: "Regional – 4.500 €/Jahr",
+  bundesland: "Bundesland – 6.500 €/Jahr",
+  bundesweit: "Bundesweit – 9.500 €/Jahr",
+};
+
+export const UNTERSCHRIFTEN = [
+  "Franziska Miodek",
+  "Ferdinand Sieglin",
+  "Marie Hemmis",
+  "Ann-Kathrin Fees",
+  "Robert Greve",
+] as const;
+
+export type Unterschrift = (typeof UNTERSCHRIFTEN)[number];
+
+export interface Person {
+  vorname: string;
+  nachname: string;
+  geschlecht: "maennlich" | "weiblich";
+}
 
 export interface FormatData {
   type: FormatType;
   beispielTitel: string;
   beispielLink: string;
-  preisProduktion: string;
-  preisProduktion2: string;
 }
 
 export interface FormData {
   anredeSiezen: boolean;
-  anredePraefix: "Liebe" | "Lieber" | "Liebe/r";
-  namen: [string, string, string];
-  unternehmen: string;
+  personen: Person[];
 
   formate: FormatData[];
 
   schulvermarktung: boolean;
-  svGebiet: string;
-  svPreis: string;
+  svGebiet: SvGebiet;
   svLaufzeit: string;
-  svMedienbox: boolean;
-  svVideostunde: boolean;
-  svSchulenInfo: string;
 
   anhang: boolean;
   anhangText: string;
   formalAngebot: boolean;
+  followUp: boolean;
+  followUpDatum: string;
+  followUpUhrzeit: string;
 
-  grusszeile: "standard" | "berlin";
-  unterschrift: string;
-  followUpText: string;
+  unterschrift: Unterschrift;
 }
 
 export const DEFAULT_FORM: FormData = {
   anredeSiezen: true,
-  anredePraefix: "Liebe",
-  namen: ["", "", ""],
-  unternehmen: "",
+  personen: [{ vorname: "", nachname: "", geschlecht: "weiblich" }],
 
   formate: [
-    {
-      type: "kurzerklart",
-      beispielTitel: "",
-      beispielLink: "",
-      preisProduktion: "",
-      preisProduktion2: "",
-    },
+    { type: "kurzerklart", beispielTitel: "", beispielLink: "" },
   ],
 
   schulvermarktung: true,
-  svGebiet: "",
-  svPreis: "",
+  svGebiet: "regional",
   svLaufzeit: "",
-  svMedienbox: true,
-  svVideostunde: true,
-  svSchulenInfo: "",
 
   anhang: false,
   anhangText: "Alleinstellungsmerkmale",
   formalAngebot: true,
+  followUp: false,
+  followUpDatum: "",
+  followUpUhrzeit: "",
 
-  grusszeile: "standard",
   unterschrift: "Robert Greve",
-  followUpText: "",
 };

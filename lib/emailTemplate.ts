@@ -1,4 +1,12 @@
-import { FormData, FormatData, FORMAT_LABELS } from "./types";
+import {
+  FormData,
+  FormatData,
+  FORMAT_LABELS,
+  Person,
+  PRODUKTION_PREISE,
+  SV_PREISE,
+  SvGebiet,
+} from "./types";
 
 interface Pronomen {
   deinIhr: string;
@@ -39,8 +47,31 @@ function getPronomen(siezen: boolean): Pronomen {
   };
 }
 
-function buildNamen(namen: [string, string, string]): string {
-  return namen.filter((n) => n.trim()).join(", ");
+function buildAnrede(personen: Person[], siezen: boolean): string {
+  const active = personen.filter((p) => p.vorname.trim() || p.nachname.trim());
+  if (active.length === 0) return "";
+  const parts = active.map((p) => {
+    if (siezen) {
+      return p.geschlecht === "maennlich"
+        ? `Sehr geehrter Herr ${p.nachname}`
+        : `Sehr geehrte Frau ${p.nachname}`;
+    } else {
+      return p.geschlecht === "maennlich"
+        ? `Lieber ${p.vorname}`
+        : `Liebe ${p.vorname}`;
+    }
+  });
+  return parts.join(", ") + ",";
+}
+
+function gebietPhrase(gebiet: SvGebiet, siezen: boolean): string {
+  if (gebiet === "regional") return siezen ? "in Ihrer Region" : "in eurer Region";
+  if (gebiet === "bundesland") return siezen ? "in Ihrem Bundesland" : "in eurem Bundesland";
+  return "bundesweit";
+}
+
+function formatPreis(n: number): string {
+  return n.toLocaleString("de-DE");
 }
 
 const ANZAHL_WEGE = ["einen Weg", "zwei Wege", "drei Wege", "vier Wege"];
@@ -63,7 +94,9 @@ function buildFormatSection(format: FormatData, index: number, p: Pronomen): str
     if (format.beispielTitel) {
       lines.push("");
       if (format.beispielLink) {
-        lines.push(`Ein Beispiel aus der Praxis: ${format.beispielTitel} (${format.beispielLink})`);
+        lines.push(
+          `Ein Beispiel aus der Praxis: ${format.beispielTitel} (${format.beispielLink})`
+        );
       } else {
         lines.push(`Ein Beispiel aus der Praxis: ${format.beispielTitel}`);
       }
@@ -74,36 +107,18 @@ function buildFormatSection(format: FormatData, index: number, p: Pronomen): str
 }
 
 function buildSVSection(data: FormData, p: Pronomen): string {
-  const lines: string[] = [];
-  lines.push("Schulvermarktung");
-  lines.push("");
-
   const medienboxLink = "https://www.deinerstertag.de/schulen/medienbox/";
   const videostundeLink = "https://www.deinerstertag.de/schulen/videostunde/";
   const schulsuche = "https://www.deinerstertag.de/schulsuche/";
 
-  const gebiet = data.svGebiet
-    ? ` in ${p.deinerIhrer} Region (${data.svGebiet})`
-    : ` in ${p.deinerIhrer} Region`;
+  const phrase = gebietPhrase(data.svGebiet, data.anredeSiezen);
 
-  let svText: string;
-  if (!data.svMedienbox && !data.svVideostunde) {
-    svText = `${p.deineIhre} Medien erreichen Schulen und Arbeitsagenturen${gebiet}.`;
-  } else if (!data.svMedienbox) {
-    svText = `${p.deineIhre} Medien erreichen Schulen und Arbeitsagenturen${gebiet}. Unsere Videostunde (${videostundeLink}) bringt praxisnahe Berufseinblicke direkt ins Klassenzimmer – gehalten von unserer Videolehrkraft vom Smartboard, inklusive kostenlosem Unterrichtsmaterial.`;
-  } else if (!data.svVideostunde) {
-    svText = `${p.deineIhre} Medien erreichen Schulen und Arbeitsagenturen${gebiet} über unsere Medienbox (${medienboxLink}), die Lehrkräfte kostenfrei ausleihen können – inklusive unseres mobilen Routers „BerUFO", mit dem Schüler*innen ${p.deineIhre.toLowerCase()} Medien auch ohne Schul-WLAN direkt im Klassenzimmer streamen können.`;
-  } else {
-    svText = `${p.deineIhre} Medien erreichen Schulen und Arbeitsagenturen${gebiet} über zwei Instrumente: Lehrkräfte können unsere Medienbox (${medienboxLink}) kostenfrei ausleihen – inklusive unseres mobilen Routers „BerUFO", mit dem Schüler*innen ${p.deineIhre.toLowerCase()} Medien auch ohne Schul-WLAN direkt im Klassenzimmer streamen können. Unsere Videostunde (${videostundeLink}) bringt darüber hinaus praxisnahe Berufseinblicke direkt ins Klassenzimmer – gehalten von unserer Videolehrkraft vom Smartboard, inklusive kostenlosem Unterrichtsmaterial.`;
-  }
-
-  lines.push(svText);
-
-  if (data.svSchulenInfo) {
-    lines.push("");
-    lines.push(data.svSchulenInfo);
-  }
-
+  const lines: string[] = [];
+  lines.push("Schulvermarktung");
+  lines.push("");
+  lines.push(
+    `${p.deineIhre} Medien erreichen Schulen und Arbeitsagenturen ${phrase} über zwei Instrumente: Lehrkräfte können unsere Medienbox (${medienboxLink}) kostenfrei ausleihen – inklusive unseres mobilen Routers „BerUFO", mit dem Schüler*innen ${p.deineIhre.toLowerCase()} Medien auch ohne Schul-WLAN direkt im Klassenzimmer streamen können. Unsere Videostunde (${videostundeLink}) bringt darüber hinaus praxisnahe Berufseinblicke direkt ins Klassenzimmer – gehalten von unserer Videolehrkraft vom Smartboard, inklusive kostenlosem Unterrichtsmaterial.`
+  );
   lines.push("");
   lines.push(
     `Eine Übersicht unserer Partnerschulen ${p.findestFinden} hier: Zu unseren Partnerschulen (${schulsuche})`
@@ -113,34 +128,27 @@ function buildSVSection(data: FormData, p: Pronomen): string {
 }
 
 function buildKostenSection(data: FormData): string {
+  const svPreis = data.schulvermarktung ? SV_PREISE[data.svGebiet] : null;
+
   const lines: string[] = [];
   lines.push("Kosten (netto)");
   lines.push("");
 
   data.formate.forEach((f) => {
     const label = FORMAT_LABELS[f.type];
-    const prod =
-      f.type === "sprachnachricht" ? f.preisProduktion || "0" : f.preisProduktion;
-
-    if (!prod && f.type !== "sprachnachricht") return;
-
-    let line: string;
-    if (f.preisProduktion2) {
-      line = `${label} Produktion (einmalig): ${prod} € (mit Schulprogramm) / ${f.preisProduktion2} € (ohne Schulprogramm)`;
-    } else {
-      line = `${label} Produktion (einmalig): ${prod} €`;
+    const prod = PRODUKTION_PREISE[f.type];
+    let line = `${label} Produktion (einmalig): ${formatPreis(prod)} €`;
+    if (svPreis !== null) {
+      line += ` Schulprogramm (jährlich): ${formatPreis(svPreis)} €`;
     }
-
-    if (data.schulvermarktung && data.svPreis) {
-      line += ` Schulprogramm (jährlich): ${data.svPreis} €`;
-    }
-
     lines.push(line);
   });
 
   if (data.schulvermarktung && data.svLaufzeit) {
     lines.push("");
-    lines.push(`Die Vertragslaufzeit für das Schulprogramm beträgt ${data.svLaufzeit}.`);
+    lines.push(
+      `Die Vertragslaufzeit für das Schulprogramm beträgt ${data.svLaufzeit}.`
+    );
   }
 
   return lines.join("\n");
@@ -148,14 +156,12 @@ function buildKostenSection(data: FormData): string {
 
 export function generateEmail(data: FormData): { betreff: string; text: string } {
   const p = getPronomen(data.anredeSiezen);
-  const namen = buildNamen(data.namen);
+  const anrede = buildAnrede(data.personen, data.anredeSiezen);
   const hasFormate = data.formate.length > 0;
-
-  const betreff = "Die Angebote von DEIN ERSTER TAG";
 
   const lines: string[] = [];
 
-  lines.push(`${data.anredePraefix} ${namen},`);
+  if (anrede) lines.push(anrede);
   lines.push("");
   lines.push(
     `vielen Dank für ${p.deinIhr} Interesse an den Angeboten von DEIN ERSTER TAG – ich freue mich, ${p.dirIhnen} hiermit Informationen zukommen zu lassen.`
@@ -181,14 +187,7 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
     lines.push(buildSVSection(data, p));
   }
 
-  const hasKosten =
-    hasFormate &&
-    (data.formate.some(
-      (f) => f.type === "sprachnachricht" || f.preisProduktion
-    ) ||
-      (data.schulvermarktung && data.svPreis));
-
-  if (hasKosten) {
+  if (hasFormate) {
     lines.push("");
     lines.push(buildKostenSection(data));
   }
@@ -200,12 +199,20 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
 
   if (data.formalAngebot) {
     lines.push("");
-    lines.push(`Auf Wunsch erstelle ich ${p.euchIhnen} gerne auch ein formelles Angebot.`);
+    lines.push(
+      `Auf Wunsch erstelle ich ${p.euchIhnen} gerne auch ein formelles Angebot.`
+    );
   }
 
   lines.push("");
-  if (data.followUpText) {
-    lines.push(`Ich freue mich auf unser Follow-up am ${data.followUpText}.`);
+  if (data.followUp && (data.followUpDatum || data.followUpUhrzeit)) {
+    const termin = [
+      data.followUpDatum,
+      data.followUpUhrzeit ? `um ${data.followUpUhrzeit} Uhr` : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    lines.push(`Ich freue mich auf unser Follow-up am ${termin}.`);
   } else {
     lines.push(
       `Bei weiteren Fragen stehe ich ${p.euchIhnen} jederzeit gern zur Verfügung.`
@@ -213,9 +220,9 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
   }
 
   lines.push("");
-  lines.push(data.grusszeile === "berlin" ? "Viele Grüße aus Berlin" : "Viele Grüße");
+  lines.push("Beste Grüße");
   lines.push("");
   lines.push(data.unterschrift);
 
-  return { betreff, text: lines.join("\n") };
+  return { betreff: "Die Angebote von DEIN ERSTER TAG", text: lines.join("\n") };
 }
