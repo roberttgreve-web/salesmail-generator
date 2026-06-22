@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 
 interface Props {
   betreff: string;
@@ -8,13 +8,112 @@ interface Props {
   onAdjusted: (newText: string) => void;
 }
 
+// ── Formatting helpers ────────────────────────────────────────────────────────
+
+const BOLD_HEADERS = new Set([
+  "Ihr Berufsmedium",
+  "Euer Berufsmedium",
+  "Unsere Schulvermarktung",
+  "Nutzungsrechte",
+  "Kosten",
+]);
+
+const BOLD_ITALIC_NAMES = new Set([
+  "Sprachnachricht / Mini-Games",
+  "#kurzerklärt",
+  "360-Grad-Rundgang",
+]);
+
+function parseLinksReact(text: string): React.ReactNode {
+  const regex = /(\S+)\s*\((https?:\/\/[^)]+)\)/g;
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = regex.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    parts.push(
+      <a
+        key={m.index}
+        href={m[2]}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 underline hover:text-blue-800"
+      >
+        {m[1]}
+      </a>
+    );
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts.length === 0 ? text : <>{parts}</>;
+}
+
+function renderEmailLines(text: string): React.ReactNode[] {
+  return text.split("\n").map((line, i) => {
+    if (!line) return <div key={i} className="h-3" />;
+    const trimmed = line.trim();
+    if (BOLD_HEADERS.has(trimmed)) {
+      return (
+        <div key={i} className="font-bold">
+          {line}
+        </div>
+      );
+    }
+    if (BOLD_ITALIC_NAMES.has(trimmed)) {
+      return (
+        <div key={i}>
+          <strong>
+            <em>{line}</em>
+          </strong>
+        </div>
+      );
+    }
+    return <div key={i}>{parseLinksReact(line)}</div>;
+  });
+}
+
+// ── HTML generation for formatted copy ────────────────────────────────────────
+
+function escHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function lineToHtml(line: string): string {
+  const regex = /(\S+)\s*\((https?:\/\/[^)]+)\)/g;
+  let result = "";
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = regex.exec(line)) !== null) {
+    result += escHtml(line.slice(last, m.index));
+    result += `<a href="${m[2]}" style="color:#1d4ed8;text-decoration:underline">${escHtml(m[1])}</a>`;
+    last = m.index + m[0].length;
+  }
+  result += escHtml(line.slice(last));
+  return result;
+}
+
+function generateHtml(text: string): string {
+  return text
+    .split("\n")
+    .map((line) => {
+      if (!line) return "<br>";
+      const trimmed = line.trim();
+      if (BOLD_HEADERS.has(trimmed)) return `<strong>${escHtml(line)}</strong>`;
+      if (BOLD_ITALIC_NAMES.has(trimmed)) return `<strong><em>${escHtml(line)}</em></strong>`;
+      return lineToHtml(line);
+    })
+    .join("<br>");
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
 export default function EmailPreview({ betreff, text, onAdjusted }: Props) {
   const [instruction, setInstruction] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [copiedFormatted, setCopiedFormatted] = useState(false);
   const [copiedBetreff, setCopiedBetreff] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const isEmpty = !text.trim();
 
@@ -46,6 +145,28 @@ export default function EmailPreview({ betreff, text, onAdjusted }: Props) {
     });
   }
 
+  async function copyFormatted() {
+    try {
+      const html = generateHtml(text);
+      if (typeof ClipboardItem !== "undefined") {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "text/html": new Blob([html], { type: "text/html" }),
+            "text/plain": new Blob([text], { type: "text/plain" }),
+          }),
+        ]);
+      } else {
+        await navigator.clipboard.writeText(text);
+      }
+      setCopiedFormatted(true);
+      setTimeout(() => setCopiedFormatted(false), 2000);
+    } catch {
+      await navigator.clipboard.writeText(text);
+      setCopiedFormatted(true);
+      setTimeout(() => setCopiedFormatted(false), 2000);
+    }
+  }
+
   function copyBetreff() {
     navigator.clipboard.writeText(betreff).then(() => {
       setCopiedBetreff(true);
@@ -55,8 +176,8 @@ export default function EmailPreview({ betreff, text, onAdjusted }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Vorschau Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-300 bg-gray-50">
+      {/* Header bar */}
+      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-300 bg-gray-50 flex-shrink-0">
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-red-400 inline-block" />
           <span className="w-3 h-3 rounded-full bg-yellow-400 inline-block" />
@@ -73,7 +194,7 @@ export default function EmailPreview({ betreff, text, onAdjusted }: Props) {
         )}
       </div>
 
-      {/* Email Content */}
+      {/* Email content */}
       <div className="flex-1 overflow-y-auto p-5 bg-gray-100">
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400">
@@ -95,35 +216,45 @@ export default function EmailPreview({ betreff, text, onAdjusted }: Props) {
                 onClick={copyBetreff}
                 className="text-xs px-2 py-1 rounded border border-gray-200 bg-white hover:bg-gray-50 transition-colors whitespace-nowrap flex-shrink-0"
               >
-                {copiedBetreff ? "✓" : "Kopieren"}
+                {copiedBetreff ? "✓" : "Betreff kopieren"}
+              </button>
+            </div>
+
+            {/* Body header with copy buttons */}
+            <div className="px-5 pt-3 pb-1 border-b border-gray-100 flex items-center justify-end gap-2">
+              <button
+                onClick={copyText}
+                className="text-xs px-2 py-1 rounded border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+              >
+                {copied ? "✓ Kopiert!" : "Text kopieren"}
+              </button>
+              <button
+                onClick={copyFormatted}
+                className="text-xs px-2 py-1 rounded border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+              >
+                {copiedFormatted ? "✓ Kopiert!" : "Formatiert kopieren"}
               </button>
             </div>
 
             {/* Body */}
-            <div className="px-5 py-4">
-              <pre
-                className="text-sm text-gray-800 whitespace-pre-wrap font-sans leading-relaxed"
-                style={{ fontFamily: "inherit" }}
-              >
-                {text}
-              </pre>
+            <div className="px-5 py-4 text-sm text-gray-800 leading-relaxed">
+              {renderEmailLines(text)}
             </div>
           </div>
         )}
       </div>
 
       {/* KI-Korrektur */}
-      <div className="border-t border-gray-300 bg-white p-3">
+      <div className="border-t border-gray-300 bg-white p-3 flex-shrink-0">
         <div className="flex items-center gap-2 mb-1.5">
           <span className="text-xs font-bold uppercase tracking-wide text-gray-500">KI-Anpassung</span>
           <span className="text-xs px-1.5 py-0.5 rounded bg-[#F5C400] text-black font-semibold">AWS Bedrock</span>
         </div>
         <div className="flex gap-2">
           <textarea
-            ref={textareaRef}
             rows={2}
             className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 resize-none outline-none focus:border-gray-500"
-            placeholder='z.B. "Ändere den Ton zu informeller" oder "Füge einen Satz über unser Jubliäum hinzu"'
+            placeholder='z.B. "Ändere den Ton zu informeller" oder "Füge einen Satz über unser Jubiläum hinzu"'
             value={instruction}
             onChange={(e) => setInstruction(e.target.value)}
             onKeyDown={(e) => {
@@ -135,10 +266,7 @@ export default function EmailPreview({ betreff, text, onAdjusted }: Props) {
             onClick={handleAdjust}
             disabled={!instruction.trim() || isEmpty || loading}
             className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{
-              background: "#111116",
-              color: "#fff",
-            }}
+            style={{ background: "#111116", color: "#fff" }}
           >
             {loading ? (
               <span className="flex items-center gap-1.5">

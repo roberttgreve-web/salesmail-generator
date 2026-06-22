@@ -54,7 +54,6 @@ export interface FormData {
 
   formate: FormatData[];
 
-  schulvermarktung: boolean;
   svGebiet: SvGebiet;
 
   anhang: boolean;
@@ -74,7 +73,6 @@ export const DEFAULT_FORM: FormData = {
     { type: "kurzerklart", beispielTitel: "", beispielLink: "" },
   ],
 
-  schulvermarktung: true,
   svGebiet: "regional",
 
   anhang: false,

@@ -232,43 +232,21 @@ export default function EmailForm({ data, onChange }: Props) {
       <div className="bg-white rounded-lg p-4 mb-3 shadow-sm">
         <SectionHeader num={3} label="Schulvermarktung" />
 
-        <div className="flex gap-2 mb-3">
-          {([true, false] as const).map((val) => (
-            <button
-              key={String(val)}
-              type="button"
-              onClick={() => set("schulvermarktung", val)}
-              className={`text-xs px-3 py-1.5 rounded border transition-colors ${
-                data.schulvermarktung === val
-                  ? "bg-[#111116] text-white border-[#111116]"
-                  : "bg-white text-gray-600 border-gray-300"
-              }`}
-            >
-              {val ? "Ja, inkl. Schulprogramm" : "Nein"}
-            </button>
-          ))}
-        </div>
-
-        {data.schulvermarktung && (
-          <>
-            <Field label="Gebiet">
-              <div className="space-y-1.5 mt-1">
-                {(Object.keys(SV_GEBIET_LABELS) as SvGebiet[]).map((gebiet) => (
-                  <label key={gebiet} className="flex items-center gap-2 cursor-pointer" style={{ marginBottom: 0 }}>
-                    <input
-                      type="radio"
-                      name="svGebiet"
-                      checked={data.svGebiet === gebiet}
-                      onChange={() => set("svGebiet", gebiet)}
-                    />
-                    <span className="text-sm">{SV_GEBIET_LABELS[gebiet]}</span>
-                  </label>
-                ))}
-              </div>
-            </Field>
-
-          </>
-        )}
+        <Field label="Gebiet">
+          <div className="space-y-1.5 mt-1">
+            {(Object.keys(SV_GEBIET_LABELS) as SvGebiet[]).map((gebiet) => (
+              <label key={gebiet} className="flex items-center gap-2 cursor-pointer" style={{ marginBottom: 0 }}>
+                <input
+                  type="radio"
+                  name="svGebiet"
+                  checked={data.svGebiet === gebiet}
+                  onChange={() => set("svGebiet", gebiet)}
+                />
+                <span className="text-sm">{SV_GEBIET_LABELS[gebiet]}</span>
+              </label>
+            ))}
+          </div>
+        </Field>
       </div>
 
       {/* Sektion 4: Zusätze */}
@@ -280,10 +258,9 @@ export default function EmailForm({ data, onChange }: Props) {
             <input
               type="checkbox"
               checked={data.anhang}
-              onChange={(e) => {
-                set("anhang", e.target.checked);
-                if (e.target.checked) set("formalAngebot", false);
-              }}
+              onChange={(e) =>
+                onChange({ ...data, anhang: e.target.checked, formalAngebot: e.target.checked ? false : data.formalAngebot })
+              }
             />
             <span className="text-sm font-medium">Anhang erwähnen</span>
           </label>
@@ -294,10 +271,9 @@ export default function EmailForm({ data, onChange }: Props) {
             <input
               type="checkbox"
               checked={data.formalAngebot}
-              onChange={(e) => {
-                set("formalAngebot", e.target.checked);
-                if (e.target.checked) set("anhang", false);
-              }}
+              onChange={(e) =>
+                onChange({ ...data, formalAngebot: e.target.checked, anhang: e.target.checked ? false : data.anhang })
+              }
             />
             <span className="text-sm font-medium">Formelles Angebot anbieten</span>
           </label>
