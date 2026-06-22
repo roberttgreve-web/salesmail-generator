@@ -78,7 +78,7 @@ function formatPreis(n: number): string {
 }
 
 function buildBerufsmediumSection(formate: FormatData[], p: P): string {
-  const bullet = formate.length > 1 ? "• " : "";
+  const bullet = formate.length > 1 ? "▪ " : "";
   const lines: string[] = [];
   lines.push(`${p.IhrEuer} Berufsmedium`);
   lines.push("");
@@ -86,30 +86,33 @@ function buildBerufsmediumSection(formate: FormatData[], p: P): string {
   formate.forEach((f) => {
     if (f.type === "sprachnachricht") {
       lines.push(
-        `${bullet}${p.IhrEuer} Beruf wird bei uns lebendig und authentisch dargestellt – durch eine Sprachnachricht ${p.IhrerEurer} Auszubildenden und interaktive Mini-Games. Die Vertonung kann entweder direkt durch eine oder einen ${p.IhrerEurer} Auszubildenden erfolgen oder alternativ KI-gestützt produziert werden.`
+        `${bullet}${p.IhrEuer} Beruf wird bei uns lebendig und authentisch dargestellt – durch eine **Sprachnachricht** ${p.IhrerEurer} Auszubildenden und interaktive **Mini-Games**. Die Vertonung kann entweder direkt durch eine oder einen ${p.IhrerEurer} Auszubildenden erfolgen oder alternativ KI-gestützt produziert werden.`
       );
+      lines.push("");
     }
     if (f.type === "kurzerklart") {
       lines.push(
-        `${bullet}Mit #kurzerklärt präsentieren wir einen Ausbildungsberuf auf unterhaltsame, moderne und kompakte Weise. Wir begleiten den gesamten Produktionsprozess – vom Kickoff über das Drehbuch bis hin zu Schnitt und Vertonung.`
+        `${bullet}Mit **#kurzerklärt** präsentieren wir einen Ausbildungsberuf auf unterhaltsame, moderne und kompakte Weise. Wir begleiten den gesamten Produktionsprozess – vom Kickoff über das Drehbuch bis hin zu Schnitt und Vertonung.`
       );
       if (f.beispielTitel) {
         const ex = f.beispielLink
-          ? `${f.beispielTitel} (${f.beispielLink})`
+          ? `[${f.beispielTitel}](${f.beispielLink})`
           : f.beispielTitel;
-        lines.push(`${bullet}Hier eine Beispielproduktion: ${ex}`);
+        lines.push(`--> Hier eine Beispielproduktion: ${ex}`);
       }
+      lines.push("");
     }
     if (f.type === "360grad") {
       lines.push(
-        `${bullet}Mit einem aufregenden 360-Grad-Rundgang ${p.gebenGebt} ${p.SieIhr} Schüler*innen authentische Einblicke in ${p.IhreEure} Ausbildungs- und Betriebsräume.`
+        `${bullet}Mit einem aufregenden **360-Grad-Rundgang** ${p.gebenGebt} ${p.SieIhr} Schüler*innen authentische Einblicke in ${p.IhreEure} Ausbildungs- und Betriebsräume.`
       );
       if (f.beispielTitel) {
         const ex = f.beispielLink
-          ? `${f.beispielTitel} (${f.beispielLink})`
+          ? `[${f.beispielTitel}](${f.beispielLink})`
           : f.beispielTitel;
-        lines.push(`${bullet}Hier eine Beispielproduktion: ${ex}`);
+        lines.push(`--> Hier eine Beispielproduktion: ${ex}`);
       }
+      lines.push("");
     }
   });
 
@@ -138,7 +141,7 @@ function buildSVSection(gebiet: SvGebiet, p: P): string {
   );
   lines.push("");
   lines.push(
-    `Auf unserer Schulsuche (${schulsuche}) ${p.findenFindet} ${p.SieIhr}, welche Schulen derzeit ${phrase} bei uns aktiv sind.`
+    `Auf unserer Schulsuche (${schulsuche}) ${p.findenFindet} ${p.SieIhr}, welche Schulen und Arbeitsagenturen derzeit ${phrase} bei uns aktiv sind.`
   );
   return lines.join("\n");
 }
@@ -230,7 +233,7 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
 
   if (data.anhang) {
     lines.push("");
-    lines.push(`Gerne ${p.sendeZu} anbei unsere Alleinstellungsmerkmale zu.`);
+    lines.push(`Anbei erhalten ${p.SieIhr} auch die formellen Angebote zu den o.g. Leistungen.`);
   }
 
   if (data.followUp && (data.followUpDatum || data.followUpUhrzeit)) {
@@ -252,5 +255,8 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
   lines.push("");
   lines.push(data.unterschrift);
 
-  return { betreff: "Die Angebote von DEIN ERSTER TAG", text: lines.join("\n") };
+  return {
+    betreff: "Ihre Ausbildung an Schulen in der Region – Infos von DEIN ERSTER TAG",
+    text: lines.join("\n"),
+  };
 }

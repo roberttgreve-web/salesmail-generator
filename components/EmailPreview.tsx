@@ -24,24 +24,37 @@ const BOLD_ITALIC_NAMES = new Set([
   "360-Grad-Rundgang",
 ]);
 
-function parseLinksReact(text: string): React.ReactNode {
-  const regex = /(\S+)\s*\((https?:\/\/[^)]+)\)/g;
+// Combined regex: [text](url) | word (url) | **bold**
+const INLINE_REGEX =
+  /\[([^\]]+)\]\((https?:\/\/[^)]+)\)|(\S+)\s*\((https?:\/\/[^)]+)\)|\*\*([^*]+)\*\*/g;
+
+function parseInlineReact(text: string): React.ReactNode {
   const parts: React.ReactNode[] = [];
   let last = 0;
   let m: RegExpExecArray | null;
-  while ((m = regex.exec(text)) !== null) {
+  const re = new RegExp(INLINE_REGEX.source, "g");
+  while ((m = re.exec(text)) !== null) {
     if (m.index > last) parts.push(text.slice(last, m.index));
-    parts.push(
-      <a
-        key={m.index}
-        href={m[2]}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-600 underline hover:text-blue-800"
-      >
-        {m[1]}
-      </a>
-    );
+    if (m[1] !== undefined) {
+      // [text](url)
+      parts.push(
+        <a key={m.index} href={m[2]} target="_blank" rel="noopener noreferrer"
+          className="text-blue-600 underline hover:text-blue-800">
+          {m[1]}
+        </a>
+      );
+    } else if (m[3] !== undefined) {
+      // word (url)
+      parts.push(
+        <a key={m.index} href={m[4]} target="_blank" rel="noopener noreferrer"
+          className="text-blue-600 underline hover:text-blue-800">
+          {m[3]}
+        </a>
+      );
+    } else if (m[5] !== undefined) {
+      // **bold**
+      parts.push(<strong key={m.index}>{m[5]}</strong>);
+    }
     last = m.index + m[0].length;
   }
   if (last < text.length) parts.push(text.slice(last));
@@ -53,56 +66,68 @@ function renderEmailLines(text: string): React.ReactNode[] {
     if (!line) return <div key={i} className="h-3" />;
     const trimmed = line.trim();
     if (BOLD_HEADERS.has(trimmed)) {
-      return (
-        <div key={i} className="font-bold">
-          {line}
-        </div>
-      );
+      return <div key={i} className="font-bold">{line}</div>;
     }
     if (BOLD_ITALIC_NAMES.has(trimmed)) {
-      return (
-        <div key={i}>
-          <strong>
-            <em>{line}</em>
-          </strong>
-        </div>
-      );
+      return <div key={i}><strong><em>{line}</em></strong></div>;
     }
-    return <div key={i}>{parseLinksReact(line)}</div>;
+    return <div key={i}>{parseInlineReact(line)}</div>;
   });
 }
 
-// ── HTML generation for formatted copy ────────────────────────────────────────
+// ── HTML generation for formatted copy (Outlook-compatible) ───────────────────
 
 function escHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function lineToHtml(line: string): string {
-  const regex = /(\S+)\s*\((https?:\/\/[^)]+)\)/g;
+function inlineToHtml(line: string): string {
   let result = "";
   let last = 0;
   let m: RegExpExecArray | null;
-  while ((m = regex.exec(line)) !== null) {
+  const re = new RegExp(INLINE_REGEX.source, "g");
+  while ((m = re.exec(line)) !== null) {
     result += escHtml(line.slice(last, m.index));
-    result += `<a href="${m[2]}" style="color:#1d4ed8;text-decoration:underline">${escHtml(m[1])}</a>`;
+    if (m[1] !== undefined) {
+      result += `<a href="${m[2]}" style="color:#1d4ed8;text-decoration:underline">${escHtml(m[1])}</a>`;
+    } else if (m[3] !== undefined) {
+      result += `<a href="${m[4]}" style="color:#1d4ed8;text-decoration:underline">${escHtml(m[3])}</a>`;
+    } else if (m[5] !== undefined) {
+      result += `<strong>${escHtml(m[5])}</strong>`;
+    }
     last = m.index + m[0].length;
   }
   result += escHtml(line.slice(last));
   return result;
 }
 
+function formatHtmlLine(line: string): string {
+  const trimmed = line.trim();
+  if (BOLD_HEADERS.has(trimmed)) return `<strong>${escHtml(line)}</strong>`;
+  if (BOLD_ITALIC_NAMES.has(trimmed)) return `<strong><em>${escHtml(line)}</em></strong>`;
+  return inlineToHtml(line);
+}
+
+// Groups consecutive non-empty lines into <p> blocks so Outlook gets
+// exactly one paragraph break per blank line (no double spacing).
 function generateHtml(text: string): string {
-  return text
-    .split("\n")
-    .map((line) => {
-      if (!line) return "<br>";
-      const trimmed = line.trim();
-      if (BOLD_HEADERS.has(trimmed)) return `<strong>${escHtml(line)}</strong>`;
-      if (BOLD_ITALIC_NAMES.has(trimmed)) return `<strong><em>${escHtml(line)}</em></strong>`;
-      return lineToHtml(line);
-    })
-    .join("<br>");
+  const lines = text.split("\n");
+  const blocks: string[][] = [];
+  let current: string[] = [];
+
+  for (const line of lines) {
+    if (!line) {
+      if (current.length > 0) { blocks.push(current); current = []; }
+    } else {
+      current.push(line);
+    }
+  }
+  if (current.length > 0) blocks.push(current);
+
+  const style = `margin:0 0 14px 0;font-family:Arial,sans-serif;font-size:14px;line-height:1.5`;
+  return blocks
+    .map((block) => `<p style="${style}">${block.map(formatHtmlLine).join("<br>")}</p>`)
+    .join("");
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -111,8 +136,7 @@ export default function EmailPreview({ betreff, text, onAdjusted }: Props) {
   const [instruction, setInstruction] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
-  const [copiedFormatted, setCopiedFormatted] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
   const [copiedBetreff, setCopiedBetreff] = useState(false);
 
   const isEmpty = !text.trim();
@@ -138,14 +162,7 @@ export default function EmailPreview({ betreff, text, onAdjusted }: Props) {
     }
   }
 
-  function copyText() {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }
-
-  async function copyFormatted() {
+  async function copyEmail() {
     try {
       const html = generateHtml(text);
       if (typeof ClipboardItem !== "undefined") {
@@ -158,12 +175,12 @@ export default function EmailPreview({ betreff, text, onAdjusted }: Props) {
       } else {
         await navigator.clipboard.writeText(text);
       }
-      setCopiedFormatted(true);
-      setTimeout(() => setCopiedFormatted(false), 2000);
+      setCopiedEmail(true);
+      setTimeout(() => setCopiedEmail(false), 2000);
     } catch {
       await navigator.clipboard.writeText(text);
-      setCopiedFormatted(true);
-      setTimeout(() => setCopiedFormatted(false), 2000);
+      setCopiedEmail(true);
+      setTimeout(() => setCopiedEmail(false), 2000);
     }
   }
 
@@ -186,10 +203,10 @@ export default function EmailPreview({ betreff, text, onAdjusted }: Props) {
         </div>
         {!isEmpty && (
           <button
-            onClick={copyText}
+            onClick={copyEmail}
             className="text-xs px-3 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50 transition-colors"
           >
-            {copied ? "✓ Kopiert!" : "Text kopieren"}
+            {copiedEmail ? "✓ Kopiert!" : "E-Mail kopieren"}
           </button>
         )}
       </div>
@@ -220,19 +237,13 @@ export default function EmailPreview({ betreff, text, onAdjusted }: Props) {
               </button>
             </div>
 
-            {/* Body header with copy buttons */}
-            <div className="px-5 pt-3 pb-1 border-b border-gray-100 flex items-center justify-end gap-2">
+            {/* Body header with E-Mail kopieren */}
+            <div className="px-5 pt-3 pb-1 border-b border-gray-100 flex items-center justify-end">
               <button
-                onClick={copyText}
+                onClick={copyEmail}
                 className="text-xs px-2 py-1 rounded border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
               >
-                {copied ? "✓ Kopiert!" : "Text kopieren"}
-              </button>
-              <button
-                onClick={copyFormatted}
-                className="text-xs px-2 py-1 rounded border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
-              >
-                {copiedFormatted ? "✓ Kopiert!" : "Formatiert kopieren"}
+                {copiedEmail ? "✓ Kopiert!" : "E-Mail kopieren"}
               </button>
             </div>
 
@@ -248,7 +259,6 @@ export default function EmailPreview({ betreff, text, onAdjusted }: Props) {
       <div className="border-t border-gray-300 bg-white p-3 flex-shrink-0">
         <div className="flex items-center gap-2 mb-1.5">
           <span className="text-xs font-bold uppercase tracking-wide text-gray-500">KI-Anpassung</span>
-          <span className="text-xs px-1.5 py-0.5 rounded bg-[#F5C400] text-black font-semibold">AWS Bedrock</span>
         </div>
         <div className="flex gap-2">
           <textarea

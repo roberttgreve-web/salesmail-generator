@@ -44,13 +44,7 @@ export default function Home() {
             style={{ height: 28, width: "auto", filter: "brightness(0) invert(1)" }}
           />
           <div className="w-px bg-gray-600 self-stretch mx-1" />
-          <span className="text-white font-semibold text-sm">E-Mail-Generator</span>
-          <span
-            className="text-xs font-bold px-2 py-0.5 rounded ml-1"
-            style={{ background: "#F5C400", color: "#000" }}
-          >
-            KI · AWS BEDROCK
-          </span>
+          <span className="text-white font-semibold text-sm">Sales-Mail-Generator</span>
         </div>
       </header>
 
