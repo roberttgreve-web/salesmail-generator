@@ -37,16 +37,12 @@ export default function Home() {
         style={{ background: "#111116", height: 48 }}
       >
         <div className="flex items-center gap-3">
-          <div className="flex flex-col leading-none">
-            <span className="text-white font-black text-xs tracking-tight">DEIN</span>
-            <span className="text-white font-black text-xs tracking-tight">ERSTER</span>
-            <span
-              className="font-black text-xs tracking-tight"
-              style={{ color: "#F5C400" }}
-            >
-              TAG
-            </span>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.svg"
+            alt="DEIN ERSTER TAG"
+            style={{ height: 28, width: "auto", filter: "brightness(0) invert(1)" }}
+          />
           <div className="w-px bg-gray-600 self-stretch mx-1" />
           <span className="text-white font-semibold text-sm">E-Mail-Generator</span>
           <span
