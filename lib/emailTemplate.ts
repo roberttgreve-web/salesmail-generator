@@ -124,7 +124,7 @@ function buildBerufsmediumSection(formate: FormatData[], p: P): string {
   return lines.join("\n").replace(/\n+$/, "");
 }
 
-function buildSVSection(gebiet: SvGebiet, p: P): string {
+function buildSVSection(gebiet: SvGebiet, p: P, partnerschulenText: string): string {
   const medienboxLink = "https://www.deinerstertag.de/schulen/medienbox/";
   const videostundeLink = "https://www.deinerstertag.de/schulen/videostunde/";
   const schulsuche = "https://www.deinerstertag.de/schulsuche/";
@@ -144,6 +144,10 @@ function buildSVSection(gebiet: SvGebiet, p: P): string {
   lines.push(
     `So ermöglichen wir ${p.IhnenDir} ${zugang} – mit einem Schülerkontakt, der bis zu 90 % günstiger ist als auf Schülermessen.`
   );
+  if (partnerschulenText) {
+    lines.push("");
+    lines.push(partnerschulenText);
+  }
   lines.push("");
   lines.push(
     `Auf unserer Schulsuche (${schulsuche}) ${p.findenFindet}, welche Schulen und Arbeitsagenturen derzeit ${phrase} bei uns aktiv sind.`
@@ -185,15 +189,15 @@ function buildPartnerschulenText(data: FormData, siezen: boolean, mehrzahl: bool
     const ort = data.partnerschulenOrt || "??";
     const anzahl = data.partnerschulenAnzahl || "??";
     const standortGen = siezen ? "Ihres" : mehrzahl ? "eures" : "deines";
-    return `Im ${umkreis} km Umkreis ${standortGen} Standorts in ${ort} sind das bereits über ${anzahl} Partnerschulen.`;
+    return `Im ${umkreis} km Umkreis ${standortGen} Standorts in ${ort} sind das bereits über **${anzahl}** **Partnerschulen**.`;
   }
   if (data.partnerschulenModus === "bundesland") {
     const bl = data.partnerschulenBundesland || "??";
     const anzahl = data.partnerschulenBundeslandAnzahl || "??";
-    return `In ${bl} arbeiten wir derzeit mit ${anzahl} Schulen zusammen.`;
+    return `In ${bl} arbeiten wir derzeit mit **${anzahl}** **Schulen** zusammen.`;
   }
   if (data.partnerschulenModus === "deutschlandweit") {
-    return "In Deutschland arbeiten wir mit 8.800 Schulen (von insgesamt 13.000 Oberschulen) zusammen.";
+    return "In Deutschland arbeiten wir mit **8.800 Schulen** (von insgesamt **13.000 Oberschulen**) zusammen.";
   }
   return "";
 }
@@ -243,14 +247,9 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
     lines.push(buildBerufsmediumSection(data.formate, p));
   }
 
-  lines.push("");
-  lines.push(buildSVSection(data.svGebiet, p));
-
   const partnerschulenText = buildPartnerschulenText(data, data.anredeSiezen, mehrzahl);
-  if (partnerschulenText) {
-    lines.push("");
-    lines.push(partnerschulenText);
-  }
+  lines.push("");
+  lines.push(buildSVSection(data.svGebiet, p, partnerschulenText));
 
   if (hasFormate) {
     lines.push("");
