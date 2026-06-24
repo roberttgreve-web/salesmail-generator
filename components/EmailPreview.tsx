@@ -112,10 +112,11 @@ function formatHtmlLine(line: string): string {
 // Result: one blank line in source → exactly <br><br> in HTML → one paragraph
 // break in Outlook (no double spacing, no missing spacing).
 function generateHtml(text: string): string {
-  return text
+  const body = text
     .split("\n")
     .map((line) => (line ? formatHtmlLine(line) + "<br>" : "<br>"))
     .join("");
+  return `<div style="font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.5; color: #000000;">${body}</div>`;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────

@@ -8,6 +8,10 @@ import {
   Person,
   SV_GEBIET_LABELS,
   SvGebiet,
+  PartnerschulenModus,
+  PARTNERSCHULEN_MODUS_LABELS,
+  BUNDESLAENDER,
+  Bundesland,
 } from "@/lib/types";
 
 
@@ -247,9 +251,79 @@ export default function EmailForm({ data, onChange }: Props) {
         </Field>
       </div>
 
-      {/* Sektion 4: Zusätze */}
+      {/* Sektion 4: Partnerschulen */}
       <div className="bg-white rounded-lg p-4 mb-3 shadow-sm">
-        <SectionHeader num={4} label="Zusätze" />
+        <SectionHeader num={4} label="Partnerschulen" />
+
+        <div className="space-y-1.5 mb-3">
+          {(Object.keys(PARTNERSCHULEN_MODUS_LABELS) as PartnerschulenModus[]).map((modus) => (
+            <label key={modus} className="flex items-center gap-2 cursor-pointer" style={{ marginBottom: 0 }}>
+              <input
+                type="radio"
+                name="partnerschulenModus"
+                checked={data.partnerschulenModus === modus}
+                onChange={() => set("partnerschulenModus", modus)}
+              />
+              <span className="text-sm">{PARTNERSCHULEN_MODUS_LABELS[modus]}</span>
+            </label>
+          ))}
+        </div>
+
+        {data.partnerschulenModus === "regional" && (
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Umkreis in km (z.B. 50)"
+                value={data.partnerschulenUmkreis}
+                onChange={(e) => set("partnerschulenUmkreis", e.target.value)}
+                style={{ width: "50%" }}
+              />
+              <input
+                type="text"
+                placeholder="Ort (z.B. Dresden)"
+                value={data.partnerschulenOrt}
+                onChange={(e) => set("partnerschulenOrt", e.target.value)}
+                style={{ width: "50%" }}
+              />
+            </div>
+            <input
+              type="text"
+              placeholder="Anzahl der Schulen (z.B. 245)"
+              value={data.partnerschulenAnzahl}
+              onChange={(e) => set("partnerschulenAnzahl", e.target.value)}
+            />
+          </div>
+        )}
+
+        {data.partnerschulenModus === "bundesland" && (
+          <div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-3">
+              {BUNDESLAENDER.map((bl) => (
+                <label key={bl} className="flex items-center gap-1.5 cursor-pointer" style={{ marginBottom: 0 }}>
+                  <input
+                    type="radio"
+                    name="partnerschulenBundesland"
+                    checked={data.partnerschulenBundesland === bl}
+                    onChange={() => set("partnerschulenBundesland", bl as Bundesland)}
+                  />
+                  <span className="text-xs">{bl}</span>
+                </label>
+              ))}
+            </div>
+            <input
+              type="text"
+              placeholder="Anzahl Partnerschulen (z.B. 320)"
+              value={data.partnerschulenBundeslandAnzahl}
+              onChange={(e) => set("partnerschulenBundeslandAnzahl", e.target.value)}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Sektion 5: Zusätze */}
+      <div className="bg-white rounded-lg p-4 mb-3 shadow-sm">
+        <SectionHeader num={5} label="Zusätze" />
 
         <div className="mb-3">
           <label className="flex items-center gap-2 cursor-pointer" style={{ marginBottom: 0 }}>
@@ -278,15 +352,28 @@ export default function EmailForm({ data, onChange }: Props) {
         </div>
 
         <div>
-          <label className="flex items-center gap-2 cursor-pointer" style={{ marginBottom: 0 }}>
+          <div className="flex gap-4 mb-2">
+            {(["nachhaken", "followup"] as const).map((opt) => (
+              <label key={opt} className="flex items-center gap-1.5 cursor-pointer" style={{ marginBottom: 0 }}>
+                <input
+                  type="radio"
+                  name="abschluss"
+                  checked={data.abschluss === opt}
+                  onChange={() => set("abschluss", opt)}
+                />
+                <span className="text-sm font-medium">{opt === "nachhaken" ? "Nachhaken" : "Follow-up Termin"}</span>
+              </label>
+            ))}
+          </div>
+          {data.abschluss === "nachhaken" && (
             <input
-              type="checkbox"
-              checked={data.followUp}
-              onChange={(e) => set("followUp", e.target.checked)}
+              type="text"
+              placeholder="Zeitraum (z.B. Ende Juli)"
+              value={data.nachhakenZeitraum}
+              onChange={(e) => set("nachhakenZeitraum", e.target.value)}
             />
-            <span className="text-sm font-medium">Follow-up Termin nennen</span>
-          </label>
-          {data.followUp && (
+          )}
+          {data.abschluss === "followup" && (
             <div className="flex gap-2 mt-1.5">
               <input
                 type="text"

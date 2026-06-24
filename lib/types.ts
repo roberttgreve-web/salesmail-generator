@@ -26,6 +26,36 @@ export const SV_GEBIET_LABELS: Record<SvGebiet, string> = {
   bundesweit: "Bundesweit – 9.500 €/Jahr",
 };
 
+export type PartnerschulenModus = "keine" | "regional" | "bundesland" | "deutschlandweit";
+
+export const PARTNERSCHULEN_MODUS_LABELS: Record<PartnerschulenModus, string> = {
+  keine: "Keine Angabe",
+  regional: "Regional",
+  bundesland: "Bundesland",
+  deutschlandweit: "Deutschlandweit",
+};
+
+export const BUNDESLAENDER = [
+  "Baden-Württemberg",
+  "Bayern",
+  "Berlin",
+  "Brandenburg",
+  "Bremen",
+  "Hamburg",
+  "Hessen",
+  "Mecklenburg-Vorpommern",
+  "Niedersachsen",
+  "Nordrhein-Westfalen",
+  "Rheinland-Pfalz",
+  "Saarland",
+  "Sachsen",
+  "Sachsen-Anhalt",
+  "Schleswig-Holstein",
+  "Thüringen",
+] as const;
+
+export type Bundesland = (typeof BUNDESLAENDER)[number];
+
 export const UNTERSCHRIFTEN = [
   "Franziska Miodek",
   "Ferdinand Sieglin",
@@ -64,11 +94,19 @@ export interface FormData {
 
   svGebiet: SvGebiet;
 
+  partnerschulenModus: PartnerschulenModus;
+  partnerschulenUmkreis: string;
+  partnerschulenOrt: string;
+  partnerschulenAnzahl: string;
+  partnerschulenBundesland: Bundesland | "";
+  partnerschulenBundeslandAnzahl: string;
+
   anhang: boolean;
   formalAngebot: boolean;
-  followUp: boolean;
+  abschluss: "nachhaken" | "followup";
   followUpDatum: string;
   followUpUhrzeit: string;
+  nachhakenZeitraum: string;
 
   unterschrift: Unterschrift;
 }
@@ -83,11 +121,19 @@ export const DEFAULT_FORM: FormData = {
 
   svGebiet: "regional",
 
+  partnerschulenModus: "keine",
+  partnerschulenUmkreis: "",
+  partnerschulenOrt: "",
+  partnerschulenAnzahl: "",
+  partnerschulenBundesland: "",
+  partnerschulenBundeslandAnzahl: "",
+
   anhang: false,
   formalAngebot: true,
-  followUp: false,
+  abschluss: "nachhaken",
   followUpDatum: "",
   followUpUhrzeit: "",
+  nachhakenZeitraum: "",
 
   unterschrift: "Robert Greve",
 };

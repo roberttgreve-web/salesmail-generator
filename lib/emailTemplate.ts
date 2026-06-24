@@ -9,6 +9,7 @@ import {
   CALENDLY_LINKS,
 } from "./types";
 
+
 interface P {
   IhrEuer: string;
   IhnenDir: string;
@@ -178,6 +179,25 @@ function buildNutzungsrechteSection(formate: FormatData[], p: P): string {
   return `Nutzungsrechte\n\n${sieIhrCap} ${p.erhaltenErhaltet} die Rechte an ${medium} ${suffix}`;
 }
 
+function buildPartnerschulenText(data: FormData, siezen: boolean, mehrzahl: boolean): string {
+  if (data.partnerschulenModus === "regional") {
+    const umkreis = data.partnerschulenUmkreis || "??";
+    const ort = data.partnerschulenOrt || "??";
+    const anzahl = data.partnerschulenAnzahl || "??";
+    const standortGen = siezen ? "Ihres" : mehrzahl ? "eures" : "deines";
+    return `Im ${umkreis} km Umkreis ${standortGen} Standorts in ${ort} sind das bereits über ${anzahl} Partnerschulen.`;
+  }
+  if (data.partnerschulenModus === "bundesland") {
+    const bl = data.partnerschulenBundesland || "??";
+    const anzahl = data.partnerschulenBundeslandAnzahl || "??";
+    return `In ${bl} arbeiten wir derzeit mit ${anzahl} Schulen zusammen.`;
+  }
+  if (data.partnerschulenModus === "deutschlandweit") {
+    return "In Deutschland arbeiten wir mit 8.800 Schulen (von insgesamt 13.000 Oberschulen) zusammen.";
+  }
+  return "";
+}
+
 function buildKostenSection(formate: FormatData[], svGebiet: SvGebiet): string {
   const svPreis = SV_PREISE[svGebiet];
   const showFormatName = formate.length > 1;
@@ -190,7 +210,7 @@ function buildKostenSection(formate: FormatData[], svGebiet: SvGebiet): string {
     if (showFormatName) lines.push(FORMAT_LABELS[f.type]);
     const prod = PRODUKTION_PREISE[f.type];
     lines.push(
-      `Produktion: ${formatPreis(prod)} €${f.type !== "sprachnachricht" ? " einmalig" : ""}`
+      `Konzeption & Produktion: ${formatPreis(prod)} €${f.type !== "sprachnachricht" ? " einmalig" : ""}`
     );
     lines.push(`Schulvermarktung: ${formatPreis(svPreis)} € jährlich`);
   });
@@ -226,6 +246,12 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
   lines.push("");
   lines.push(buildSVSection(data.svGebiet, p));
 
+  const partnerschulenText = buildPartnerschulenText(data, data.anredeSiezen, mehrzahl);
+  if (partnerschulenText) {
+    lines.push("");
+    lines.push(partnerschulenText);
+  }
+
   if (hasFormate) {
     lines.push("");
     lines.push(buildNutzungsrechteSection(data.formate, p));
@@ -235,7 +261,7 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
 
   if (data.formalAngebot) {
     lines.push("");
-    lines.push(`Auf Wunsch erstelle ich ${p.IhnenDir} gerne auch ein formelles Angebot.`);
+    lines.push(`Auf Wunsch erstelle ich ${p.IhnenDir} gerne auch ein formelles, unverbindliches Angebot.`);
   }
 
   if (data.anhang) {
@@ -243,7 +269,7 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
     lines.push(`Anbei erhalten ${p.SieIhr} auch die formellen Angebote zu den o.g. Leistungen.`);
   }
 
-  if (data.followUp && (data.followUpDatum || data.followUpUhrzeit)) {
+  if (data.abschluss === "followup" && (data.followUpDatum || data.followUpUhrzeit)) {
     const termin = [
       data.followUpDatum,
       data.followUpUhrzeit ? `um ${data.followUpUhrzeit} Uhr` : "",
@@ -252,6 +278,18 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
       .join(" ");
     lines.push("");
     lines.push(`Ich freue mich auf unser Follow-up am ${termin}.`);
+  } else if (data.abschluss === "nachhaken") {
+    lines.push("");
+    const zeitraum = data.nachhakenZeitraum || "demnächst";
+    let nachhakenSatz: string;
+    if (data.anredeSiezen) {
+      nachhakenSatz = `Ich freue mich auf Ihr Feedback. Bitte wenden Sie sich bei Fragen gerne an mich. Ansonsten melde ich mich ${zeitraum} wieder bei Ihnen.`;
+    } else if (mehrzahl) {
+      nachhakenSatz = `Ich freue mich auf euer Feedback. Bitte wendet euch bei Fragen gerne an mich. Ansonsten melde ich mich ${zeitraum} wieder bei euch.`;
+    } else {
+      nachhakenSatz = `Ich freue mich auf dein Feedback. Bitte wende dich bei Fragen gerne an mich. Ansonsten melde ich mich ${zeitraum} wieder bei dir.`;
+    }
+    lines.push(nachhakenSatz);
   } else {
     lines.push("");
     const calendlyLink = CALENDLY_LINKS[data.unterschrift];
@@ -267,12 +305,18 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
   }
 
   lines.push("");
-  lines.push("Mit besten Grüßen");
-  lines.push("");
-  lines.push(data.unterschrift);
+  if (data.unterschrift === "Ann-Kathrin Fees") {
+    lines.push("Herzliche Grüße");
+    lines.push("");
+    lines.push("Anna");
+  } else {
+    lines.push("Mit besten Grüßen");
+    lines.push("");
+    lines.push(data.unterschrift);
+  }
 
   return {
-    betreff: "Ihre Ausbildung an Schulen in der Region – Infos von DEIN ERSTER TAG",
+    betreff: "Ihr Angebot von DEIN ERSTER TAG",
     text: lines.join("\n"),
   };
 }
