@@ -8,8 +8,6 @@ import {
   Person,
   SV_GEBIET_LABELS,
   SvGebiet,
-  UNTERSCHRIFTEN,
-  Unterschrift,
 } from "@/lib/types";
 
 
@@ -307,22 +305,6 @@ export default function EmailForm({ data, onChange }: Props) {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Sektion 5: Abschluss */}
-      <div className="bg-white rounded-lg p-4 mb-3 shadow-sm">
-        <SectionHeader num={5} label="Abschluss" />
-
-        <Field label="Unterschrift">
-          <select
-            value={data.unterschrift}
-            onChange={(e) => set("unterschrift", e.target.value as Unterschrift)}
-          >
-            {UNTERSCHRIFTEN.map((name) => (
-              <option key={name} value={name}>{name}</option>
-            ))}
-          </select>
-        </Field>
       </div>
 
     </div>

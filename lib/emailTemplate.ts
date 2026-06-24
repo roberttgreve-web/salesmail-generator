@@ -6,6 +6,7 @@ import {
   PRODUKTION_PREISE,
   SV_PREISE,
   SvGebiet,
+  CALENDLY_LINKS,
 } from "./types";
 
 interface P {
@@ -253,7 +254,16 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
     lines.push(`Ich freue mich auf unser Follow-up am ${termin}.`);
   } else {
     lines.push("");
-    lines.push(`Bei weiteren Fragen stehe ich ${p.IhnenDir} jederzeit zur Verfügung.`);
+    const calendlyLink = CALENDLY_LINKS[data.unterschrift];
+    let calendlySatz: string;
+    if (data.anredeSiezen) {
+      calendlySatz = `Gerne stehe ich Ihnen für ein Gespräch zur Verfügung. Buchen Sie sich dazu einfach einen Termin in meinem [KALENDER](${calendlyLink}).`;
+    } else if (mehrzahl) {
+      calendlySatz = `Gerne stehe ich euch für ein Gespräch zur Verfügung. Bucht euch dazu einfach einen Termin in meinem [KALENDER](${calendlyLink}).`;
+    } else {
+      calendlySatz = `Gerne stehe ich dir für ein Gespräch zur Verfügung. Buch dir dazu einfach einen Termin in meinem [KALENDER](${calendlyLink}).`;
+    }
+    lines.push(calendlySatz);
   }
 
   lines.push("");

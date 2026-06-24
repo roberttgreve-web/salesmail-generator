@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import EmailForm from "@/components/EmailForm";
 import EmailPreview from "@/components/EmailPreview";
-import { FormData, DEFAULT_FORM } from "@/lib/types";
+import { FormData, DEFAULT_FORM, UNTERSCHRIFTEN, Unterschrift } from "@/lib/types";
 import { generateEmail } from "@/lib/emailTemplate";
 
 export default function Home() {
@@ -33,7 +33,7 @@ export default function Home() {
     <div className="flex flex-col" style={{ height: "100vh", overflow: "hidden" }}>
       {/* Header */}
       <header
-        className="flex items-center px-5 flex-shrink-0"
+        className="flex items-center justify-between px-5 flex-shrink-0"
         style={{ background: "#111116", height: 48 }}
       >
         <div className="flex items-center gap-3">
@@ -45,6 +45,29 @@ export default function Home() {
           />
           <div className="w-px bg-gray-600 self-stretch mx-1" />
           <span className="text-white font-semibold text-sm">Sales-Mail-Generator</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400 text-xs">Ich bin:</span>
+          <select
+            value={formData.unterschrift}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, unterschrift: e.target.value as Unterschrift }))
+            }
+            style={{
+              background: "#1e1e24",
+              color: "#fff",
+              border: "1px solid #3a3a44",
+              borderRadius: 6,
+              padding: "4px 8px",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            {UNTERSCHRIFTEN.map((name) => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
         </div>
       </header>
 
