@@ -22,7 +22,7 @@ interface P {
   sendeZu: string;
 }
 
-function pron(siezen: boolean): P {
+function pron(siezen: boolean, mehrzahl = false): P {
   if (siezen) {
     return {
       IhrEuer: "Ihr",
@@ -40,7 +40,7 @@ function pron(siezen: boolean): P {
   }
   return {
     IhrEuer: "Euer",
-    IhnenDir: "dir",
+    IhnenDir: mehrzahl ? "euch" : "dir",
     SieIhr: "ihr",
     IhreEure: "Eure",
     IhrerEurer: "eurer",
@@ -49,7 +49,7 @@ function pron(siezen: boolean): P {
     erhaltenErhaltet: "erhaltet",
     gebenGebt: "gebt",
     findenFindet: "findet ihr",
-    sendeZu: "sende ich dir",
+    sendeZu: mehrzahl ? "sende ich euch" : "sende ich dir",
   };
 }
 
@@ -144,7 +144,7 @@ function buildSVSection(gebiet: SvGebiet, p: P): string {
   );
   lines.push("");
   lines.push(
-    `Auf unserer Schulsuche (${schulsuche}) ${p.findenFindet} ${p.SieIhr}, welche Schulen und Arbeitsagenturen derzeit ${phrase} bei uns aktiv sind.`
+    `Auf unserer Schulsuche (${schulsuche}) ${p.findenFindet}, welche Schulen und Arbeitsagenturen derzeit ${phrase} bei uns aktiv sind.`
   );
   return lines.join("\n");
 }
@@ -173,7 +173,8 @@ function buildNutzungsrechteSection(formate: FormatData[], p: P): string {
       "zur freien Nutzung auf Messen, der Website, Social Media oder Events. Bei den 360-Grad-Rundgängen und #kurzerklärt gelten die Rechte unbefristet, bei den Sprachnachrichten sowie den Mini-Games bis zum Ende der Vertragslaufzeit.";
   }
 
-  return `Nutzungsrechte\n\n${p.SieIhr} ${p.erhaltenErhaltet} die Rechte an ${medium} ${suffix}`;
+  const sieIhrCap = p.SieIhr.charAt(0).toUpperCase() + p.SieIhr.slice(1);
+  return `Nutzungsrechte\n\n${sieIhrCap} ${p.erhaltenErhaltet} die Rechte an ${medium} ${suffix}`;
 }
 
 function buildKostenSection(formate: FormatData[], svGebiet: SvGebiet): string {
@@ -194,12 +195,14 @@ function buildKostenSection(formate: FormatData[], svGebiet: SvGebiet): string {
   });
 
   lines.push("");
-  lines.push("Die Laufzeit der Schulvermarktung beträgt ein Jahr.");
+  lines.push("Die Laufzeit der Schulvermarktung beträgt 12 Monate ab Fertigstellung des Mediums.");
   return lines.join("\n");
 }
 
 export function generateEmail(data: FormData): { betreff: string; text: string } {
-  const p = pron(data.anredeSiezen);
+  const active = data.personen.filter((person) => person.vorname.trim() || person.nachname.trim());
+  const mehrzahl = active.length > 1;
+  const p = pron(data.anredeSiezen, mehrzahl);
   const anrede = buildAnrede(data.personen, data.anredeSiezen);
   const hasFormate = data.formate.length > 0;
   const lines: string[] = [];

@@ -8,7 +8,7 @@ export const FORMAT_LABELS: Record<FormatType, string> = {
 
 export const PRODUKTION_PREISE: Record<FormatType, number> = {
   kurzerklart: 4900,
-  "360grad": 13900,
+  "360grad": 14900,
   sprachnachricht: 0,
 };
 
