@@ -265,7 +265,7 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
 
   if (data.anhang) {
     lines.push("");
-    lines.push(`Anbei erhalten ${p.SieIhr} auch die unverbindlichen, formellen Angebote zu den o.g. Leistungen.`);
+    lines.push(`Anbei erhalten ${p.SieIhr} auch die formellen Angebote zu den o.g. Leistungen.`);
   }
 
   if (data.abschluss === "followup" && (data.followUpDatum || data.followUpUhrzeit)) {
