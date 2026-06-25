@@ -206,7 +206,7 @@ function buildKostenSection(formate: FormatData[], svGebiet: SvGebiet): string {
   const svPreis = SV_PREISE[svGebiet];
   const showFormatName = formate.length > 1;
   const lines: string[] = [];
-  lines.push("Kosten");
+  lines.push("Kosten (netto)");
   lines.push("");
 
   formate.forEach((f, i) => {
@@ -265,7 +265,7 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
 
   if (data.anhang) {
     lines.push("");
-    lines.push(`Anbei erhalten ${p.SieIhr} auch die formellen Angebote zu den o.g. Leistungen.`);
+    lines.push(`Anbei erhalten ${p.SieIhr} auch die unverbindlichen, formellen Angebote zu den o.g. Leistungen.`);
   }
 
   if (data.abschluss === "followup" && (data.followUpDatum || data.followUpUhrzeit)) {
@@ -305,9 +305,11 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
 
   lines.push("");
   if (data.unterschrift === "Ann-Kathrin Fees") {
-    lines.push("Herzliche Grüße");
-    lines.push("");
-    lines.push("Anna");
+    if (data.anredeSiezen) {
+      lines.push("Herzliche Grüße, Anna Fees");
+    } else {
+      lines.push("Herzliche Grüße, Anna");
+    }
   } else {
     lines.push("Mit besten Grüßen");
     lines.push("");
