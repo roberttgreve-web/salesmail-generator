@@ -186,7 +186,7 @@ export default function EmailForm({ data, onChange }: Props) {
                 onClick={() => toggleFormat(type)}
                 className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
                   active
-                    ? "bg-[#111116] text-white border-[#111116]"
+                    ? "bg-[#00afd6] text-white border-[#00afd6]"
                     : "bg-white text-gray-600 border-gray-300 hover:border-gray-500"
                 }`}
               >

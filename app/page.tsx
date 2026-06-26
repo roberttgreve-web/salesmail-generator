@@ -34,34 +34,35 @@ export default function Home() {
       {/* Header */}
       <header
         className="flex items-center justify-between px-5 flex-shrink-0"
-        style={{ background: "#111116", height: 48 }}
+        style={{ background: "#fff", height: 60, borderBottom: "1px solid #eaeaea" }}
       >
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/logo.svg"
             alt="DEIN ERSTER TAG"
-            style={{ height: 28, width: "auto", filter: "brightness(0) invert(1)" }}
+            style={{ height: 28, width: "auto" }}
           />
-          <div className="w-px bg-gray-600 self-stretch mx-1" />
-          <span className="text-white font-semibold text-sm">Sales-Mail-Generator</span>
+          <div style={{ width: 1, height: 20, background: "rgba(24,24,24,0.15)", margin: "0 4px" }} />
+          <span style={{ fontWeight: 600, fontSize: 14, color: "#181818" }}>Sales-Mail-Generator</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-gray-400 text-xs">Ich bin:</span>
+          <span style={{ color: "#999", fontSize: 12 }}>Ich bin:</span>
           <select
             value={formData.unterschrift}
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, unterschrift: e.target.value as Unterschrift }))
             }
             style={{
-              background: "#1e1e24",
-              color: "#fff",
-              border: "1px solid #3a3a44",
-              borderRadius: 6,
-              padding: "4px 8px",
+              background: "#fff",
+              color: "#181818",
+              border: "1px solid #e0e0e0",
+              borderRadius: 8,
+              padding: "5px 10px",
               fontSize: 13,
               fontWeight: 600,
               cursor: "pointer",
+              width: "auto",
             }}
           >
             {UNTERSCHRIFTEN.map((name) => (
@@ -75,8 +76,8 @@ export default function Home() {
       <div className="flex flex-1 min-h-0">
         {/* Left: Form */}
         <div
-          className="flex-shrink-0 border-r border-gray-300 bg-gray-50 overflow-hidden"
-          style={{ width: 380 }}
+          className="flex-shrink-0 overflow-hidden"
+          style={{ width: 380, borderRight: "1px solid #eaeaea", background: "#fafafa" }}
         >
           <EmailForm data={formData} onChange={handleFormChange} />
         </div>

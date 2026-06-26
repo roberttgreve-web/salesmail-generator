@@ -265,7 +265,7 @@ export default function EmailPreview({ betreff, text, onAdjusted }: Props) {
             onClick={handleAdjust}
             disabled={!instruction.trim() || isEmpty || loading}
             className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ background: "#111116", color: "#fff" }}
+            style={{ background: "#00afd6", color: "#fff" }}
           >
             {loading ? (
               <span className="flex items-center gap-1.5">
