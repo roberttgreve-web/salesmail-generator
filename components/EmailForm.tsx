@@ -15,7 +15,7 @@ import {
 } from "@/lib/types";
 
 
-const FORMAT_OPTIONS: FormatType[] = ["sprachnachricht", "kurzerklart", "360grad"];
+const FORMAT_OPTIONS: FormatType[] = ["sprachnachricht", "kurzerklart", "360grad", "ar-avatar"];
 
 interface Props {
   data: FormData;
@@ -202,7 +202,7 @@ export default function EmailForm({ data, onChange }: Props) {
               {FORMAT_LABELS[format.type]}
             </div>
 
-            {format.type !== "sprachnachricht" && (
+            {format.type !== "sprachnachricht" && format.type !== "ar-avatar" && (
               <>
                 <Field label="Beispielmedium – Berufsbezeichnung / Titel">
                   <input

@@ -1,29 +1,40 @@
-export type FormatType = "kurzerklart" | "360grad" | "sprachnachricht";
+export type FormatType = "kurzerklart" | "360grad" | "sprachnachricht" | "ar-avatar";
 
 export const FORMAT_LABELS: Record<FormatType, string> = {
   kurzerklart: "#kurzerklärt",
   "360grad": "360-Grad-Rundgang",
   sprachnachricht: "Sprachnachricht / Mini-Games",
+  "ar-avatar": "Augmented Reality-Avatar",
 };
 
 export const PRODUKTION_PREISE: Record<FormatType, number> = {
   kurzerklart: 4900,
   "360grad": 14900,
   sprachnachricht: 0,
+  "ar-avatar": 1500,
 };
 
 export type SvGebiet = "regional" | "bundesland" | "bundesweit";
 
-export const SV_PREISE: Record<SvGebiet, number> = {
-  regional: 4500,
-  bundesland: 6500,
-  bundesweit: 9500,
+// Schulvermarktung wird additiv berechnet: Basispreis (immer enthalten, deckt
+// Sprachnachricht/Mini-Games ab) + ein Aufschlag pro zusätzlich gewähltem
+// Format (#kurzerklärt / 360-Grad / AR-Avatar).
+export const SV_BASIS_PREISE: Record<SvGebiet, number> = {
+  regional: 3000,
+  bundesland: 4500,
+  bundesweit: 6000,
+};
+
+export const SV_ADDON_PREISE: Record<SvGebiet, number> = {
+  regional: 1500,
+  bundesland: 3000,
+  bundesweit: 4500,
 };
 
 export const SV_GEBIET_LABELS: Record<SvGebiet, string> = {
-  regional: "Regional – 4.500 €/Jahr",
-  bundesland: "Bundesland – 6.500 €/Jahr",
-  bundesweit: "Bundesweit – 9.500 €/Jahr",
+  regional: "Regional – 50 km Umkreis",
+  bundesland: "Bundesland",
+  bundesweit: "Deutschlandweit",
 };
 
 export type PartnerschulenModus = "keine" | "regional" | "bundesland" | "deutschlandweit";

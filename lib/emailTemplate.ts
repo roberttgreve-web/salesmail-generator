@@ -4,7 +4,8 @@ import {
   FORMAT_LABELS,
   Person,
   PRODUKTION_PREISE,
-  SV_PREISE,
+  SV_BASIS_PREISE,
+  SV_ADDON_PREISE,
   SvGebiet,
   CALENDLY_LINKS,
 } from "./types";
@@ -22,6 +23,8 @@ interface P {
   gebenGebt: string;
   findenFindet: string;
   sendeZu: string;
+  ueberzeugtSelbst: string;
+  gebtBescheid: string;
 }
 
 function pron(siezen: boolean, mehrzahl = false): P {
@@ -38,6 +41,8 @@ function pron(siezen: boolean, mehrzahl = false): P {
       gebenGebt: "geben",
       findenFindet: "finden Sie",
       sendeZu: "sende ich Ihnen",
+      ueberzeugtSelbst: "Überzeugen Sie sich",
+      gebtBescheid: "geben Sie mir",
     };
   }
   return {
@@ -52,19 +57,25 @@ function pron(siezen: boolean, mehrzahl = false): P {
     gebenGebt: "gebt",
     findenFindet: "findet ihr",
     sendeZu: mehrzahl ? "sende ich euch" : "sende ich dir",
+    ueberzeugtSelbst: mehrzahl ? "Überzeugt euch" : "Überzeug dich",
+    gebtBescheid: mehrzahl ? "gebt mir" : "gib mir",
   };
 }
 
 function buildAnrede(personen: Person[], siezen: boolean): string {
   const active = personen.filter((p) => p.vorname.trim() || p.nachname.trim());
   if (active.length === 0) return "";
-  const parts = active.map((p) => {
+  const parts = active.map((p, i) => {
+    let phrase: string;
     if (siezen) {
-      return p.geschlecht === "maennlich"
-        ? `Sehr geehrter Herr ${p.nachname}`
-        : `Sehr geehrte Frau ${p.nachname}`;
+      phrase =
+        p.geschlecht === "maennlich"
+          ? `Sehr geehrter Herr ${p.nachname}`
+          : `Sehr geehrte Frau ${p.nachname}`;
+    } else {
+      phrase = p.geschlecht === "maennlich" ? `Lieber ${p.vorname}` : `Liebe ${p.vorname}`;
     }
-    return p.geschlecht === "maennlich" ? `Lieber ${p.vorname}` : `Liebe ${p.vorname}`;
+    return i > 0 ? phrase.charAt(0).toLowerCase() + phrase.slice(1) : phrase;
   });
   return parts.join(", ") + ",";
 }
@@ -107,7 +118,7 @@ function buildBerufsmediumSection(formate: FormatData[], p: P): string {
     }
     if (f.type === "360grad") {
       lines.push(
-        `${bullet}Mit einem aufregenden **360-Grad-Rundgang** ${p.gebenGebt} ${p.SieIhr} Schüler*innen authentische Einblicke in ${p.IhreEure} Ausbildungs- und Betriebsräume.`
+        `${bullet}Mit einem aufregenden **360-Grad-Rundgang** ${p.gebenGebt} ${p.SieIhr} Schüler*innen authentische Einblicke in ${p.IhreEure} Ausbildungs- und Betriebsräume. ${p.ueberzeugtSelbst} selbst von der Wirkung unserer 360°-Filme: ${p.gebtBescheid} einfach kurz Bescheid, dann ${p.sendeZu} unsere VR-Brille für 2–3 Wochen zum unverbindlichen Ausprobieren zu.`
       );
       if (f.beispielTitel) {
         const url = f.beispielLink
@@ -116,6 +127,15 @@ function buildBerufsmediumSection(formate: FormatData[], p: P): string {
         const ex = url ? `[${f.beispielTitel}](${url})` : f.beispielTitel;
         lines.push(`--> Hier eine Beispielproduktion: ${ex}`);
       }
+      lines.push("");
+    }
+    if (f.type === "ar-avatar") {
+      lines.push(
+        `${bullet}Mit einem **Augmented-Reality-Avatar** lassen wir aus einer GameCard in ${p.IhremEurem} CI und ${p.IhrerEurer} Arbeitskleidung ein 3D-Avatar ${p.IhrerEurer} Azubis „auferstehen" – Schüler*innen können mit diesem Avatar interagieren: in der Schule, auf Messen oder zu Hause, denn die GameCard funktioniert zugleich als Visitenkarte.`
+      );
+      lines.push(
+        `--> Den allerersten Prototyp gibt es [hier](https://www.youtube.com/shorts/uXLoTjtRp1M) zu sehen (Hinweis: Der Prototyp befindet sich noch in der Konzeptionsphase und wird in den nächsten Wochen weiterentwickelt.)`
+      );
       lines.push("");
     }
   });
@@ -155,28 +175,34 @@ function buildSVSection(gebiet: SvGebiet, p: P, partnerschulenText: string): str
   return lines.join("\n");
 }
 
+const UNBEFRISTET_PHRASE: Partial<Record<FormatData["type"], string>> = {
+  kurzerklart: "#kurzerklärt",
+  "360grad": "den 360-Grad-Rundgängen",
+  "ar-avatar": "dem AR-Avatar",
+};
+
+function joinNatural(items: string[]): string {
+  if (items.length <= 1) return items[0] ?? "";
+  return items.slice(0, -1).join(", ") + " und " + items[items.length - 1];
+}
+
 function buildNutzungsrechteSection(formate: FormatData[], p: P): string {
   const hasS = formate.some((f) => f.type === "sprachnachricht");
-  const hasK = formate.some((f) => f.type === "kurzerklart");
-  const has3 = formate.some((f) => f.type === "360grad");
+  const unbefristetFormate = formate
+    .filter((f) => f.type !== "sprachnachricht")
+    .map((f) => UNBEFRISTET_PHRASE[f.type])
+    .filter((x): x is string => Boolean(x));
   const medium = formate.length === 1 ? `${p.IhremEurem} Medium` : `${p.IhrenEuren} Medien`;
 
   let suffix: string;
   if (!hasS) {
     suffix =
       "zur unbefristeten freien Nutzung auf Messen, der Website, Social Media oder Events – auch über den Vertragszeitraum hinaus.";
-  } else if (!hasK && !has3) {
+  } else if (unbefristetFormate.length === 0) {
     suffix =
       "zur freien Nutzung auf Messen, der Website, Social Media oder Events – bis zum Ende der Vertragslaufzeit.";
-  } else if (hasK && !has3) {
-    suffix =
-      "zur freien Nutzung auf Messen, der Website, Social Media oder Events. Bei #kurzerklärt gelten die Rechte unbefristet, bei den Sprachnachrichten und den Mini-Games bis zum Ende der Vertragslaufzeit.";
-  } else if (has3 && !hasK) {
-    suffix =
-      "zur freien Nutzung auf Messen, der Website, Social Media oder Events. Bei den 360-Grad-Rundgängen gelten die Rechte unbefristet, bei den Sprachnachrichten und den Mini-Games bis zum Ende der Vertragslaufzeit.";
   } else {
-    suffix =
-      "zur freien Nutzung auf Messen, der Website, Social Media oder Events. Bei den 360-Grad-Rundgängen und #kurzerklärt gelten die Rechte unbefristet, bei den Sprachnachrichten sowie den Mini-Games bis zum Ende der Vertragslaufzeit.";
+    suffix = `zur freien Nutzung auf Messen, der Website, Social Media oder Events. Bei ${joinNatural(unbefristetFormate)} gelten die Rechte unbefristet, bei den Sprachnachrichten und den Mini-Games bis zum Ende der Vertragslaufzeit.`;
   }
 
   const sieIhrCap = p.SieIhr.charAt(0).toUpperCase() + p.SieIhr.slice(1);
@@ -203,7 +229,12 @@ function buildPartnerschulenText(data: FormData, siezen: boolean, mehrzahl: bool
 }
 
 function buildKostenSection(formate: FormatData[], svGebiet: SvGebiet): string {
-  const svPreis = SV_PREISE[svGebiet];
+  // Additiv: Basispreis (deckt Sprachnachricht/Mini-Games ab, immer enthalten)
+  // + ein Aufschlag pro zusätzlich gewähltem Format (#kurzerklärt/360°/AR-Avatar).
+  const basis = SV_BASIS_PREISE[svGebiet];
+  const addonPreis = SV_ADDON_PREISE[svGebiet];
+  const addonCount = formate.filter((f) => f.type !== "sprachnachricht").length;
+  const svGesamt = basis + addonCount * addonPreis;
   const showFormatName = formate.length > 1;
   const lines: string[] = [];
   lines.push("Kosten (netto)");
@@ -216,9 +247,10 @@ function buildKostenSection(formate: FormatData[], svGebiet: SvGebiet): string {
     lines.push(
       `Konzeption & Produktion: ${formatPreis(prod)} €${f.type !== "sprachnachricht" ? " einmalig" : ""}`
     );
-    lines.push(`Schulvermarktung: ${formatPreis(svPreis)} € jährlich`);
   });
 
+  lines.push("");
+  lines.push(`Schulvermarktung: ${formatPreis(svGesamt)} € jährlich`);
   lines.push("");
   lines.push("Die Laufzeit der Schulvermarktung beträgt 12 Monate ab Fertigstellung des Mediums.");
   return lines.join("\n");
@@ -313,7 +345,7 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
   } else {
     lines.push("Mit besten Grüßen");
     lines.push("");
-    lines.push(data.unterschrift);
+    lines.push(data.anredeSiezen ? data.unterschrift : data.unterschrift.split(" ")[0]);
   }
 
   return {

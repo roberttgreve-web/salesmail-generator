@@ -15,13 +15,14 @@ const BOLD_HEADERS = new Set([
   "Euer Berufsmedium",
   "Unsere Schulvermarktung",
   "Nutzungsrechte",
-  "Kosten",
+  "Kosten (netto)",
 ]);
 
 const BOLD_ITALIC_NAMES = new Set([
   "Sprachnachricht / Mini-Games",
   "#kurzerklärt",
   "360-Grad-Rundgang",
+  "Augmented Reality-Avatar",
 ]);
 
 // Combined regex: [text](url) | word (url) | **bold**
