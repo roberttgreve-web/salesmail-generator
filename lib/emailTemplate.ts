@@ -4,8 +4,8 @@ import {
   FORMAT_LABELS,
   Person,
   PRODUKTION_PREISE,
-  SV_BASIS_PREISE,
-  SV_ADDON_PREISE,
+  SV_PREISE_SPRACHNACHRICHT,
+  SV_PREISE_ANDERE,
   SvGebiet,
   CALENDLY_LINKS,
 } from "./types";
@@ -175,9 +175,14 @@ function buildSVSection(gebiet: SvGebiet, p: P, partnerschulenText: string): str
   return lines.join("\n");
 }
 
-const UNBEFRISTET_PHRASE: Partial<Record<FormatData["type"], string>> = {
+// Unbefristete Nutzungsrechte: #kurzerklärt / 360-Grad.
+// Befristete Nutzungsrechte (bis Ende Vertragslaufzeit): Sprachnachricht / AR-Avatar.
+const UNBEFRISTET_TYPES: FormatData["type"][] = ["kurzerklart", "360grad"];
+
+const FORMAT_PHRASE_DATIV: Record<FormatData["type"], string> = {
   kurzerklart: "#kurzerklärt",
   "360grad": "den 360-Grad-Rundgängen",
+  sprachnachricht: "den Sprachnachrichten und den Mini-Games",
   "ar-avatar": "dem AR-Avatar",
 };
 
@@ -187,22 +192,23 @@ function joinNatural(items: string[]): string {
 }
 
 function buildNutzungsrechteSection(formate: FormatData[], p: P): string {
-  const hasS = formate.some((f) => f.type === "sprachnachricht");
-  const unbefristetFormate = formate
-    .filter((f) => f.type !== "sprachnachricht")
-    .map((f) => UNBEFRISTET_PHRASE[f.type])
-    .filter((x): x is string => Boolean(x));
+  const unbefristet = formate
+    .filter((f) => UNBEFRISTET_TYPES.includes(f.type))
+    .map((f) => FORMAT_PHRASE_DATIV[f.type]);
+  const befristet = formate
+    .filter((f) => !UNBEFRISTET_TYPES.includes(f.type))
+    .map((f) => FORMAT_PHRASE_DATIV[f.type]);
   const medium = formate.length === 1 ? `${p.IhremEurem} Medium` : `${p.IhrenEuren} Medien`;
 
   let suffix: string;
-  if (!hasS) {
+  if (befristet.length === 0) {
     suffix =
       "zur unbefristeten freien Nutzung auf Messen, der Website, Social Media oder Events – auch über den Vertragszeitraum hinaus.";
-  } else if (unbefristetFormate.length === 0) {
+  } else if (unbefristet.length === 0) {
     suffix =
       "zur freien Nutzung auf Messen, der Website, Social Media oder Events – bis zum Ende der Vertragslaufzeit.";
   } else {
-    suffix = `zur freien Nutzung auf Messen, der Website, Social Media oder Events. Bei ${joinNatural(unbefristetFormate)} gelten die Rechte unbefristet, bei den Sprachnachrichten und den Mini-Games bis zum Ende der Vertragslaufzeit.`;
+    suffix = `zur freien Nutzung auf Messen, der Website, Social Media oder Events. Bei ${joinNatural(unbefristet)} gelten die Rechte unbefristet, bei ${joinNatural(befristet)} bis zum Ende der Vertragslaufzeit.`;
   }
 
   const sieIhrCap = p.SieIhr.charAt(0).toUpperCase() + p.SieIhr.slice(1);
@@ -228,13 +234,13 @@ function buildPartnerschulenText(data: FormData, siezen: boolean, mehrzahl: bool
   return "";
 }
 
+function svPreisFuerFormat(type: FormatData["type"], svGebiet: SvGebiet): number {
+  return type === "sprachnachricht"
+    ? SV_PREISE_SPRACHNACHRICHT[svGebiet]
+    : SV_PREISE_ANDERE[svGebiet];
+}
+
 function buildKostenSection(formate: FormatData[], svGebiet: SvGebiet): string {
-  // Additiv: Basispreis (deckt Sprachnachricht/Mini-Games ab, immer enthalten)
-  // + ein Aufschlag pro zusätzlich gewähltem Format (#kurzerklärt/360°/AR-Avatar).
-  const basis = SV_BASIS_PREISE[svGebiet];
-  const addonPreis = SV_ADDON_PREISE[svGebiet];
-  const addonCount = formate.filter((f) => f.type !== "sprachnachricht").length;
-  const svGesamt = basis + addonCount * addonPreis;
   const showFormatName = formate.length > 1;
   const lines: string[] = [];
   lines.push("Kosten (netto)");
@@ -247,10 +253,9 @@ function buildKostenSection(formate: FormatData[], svGebiet: SvGebiet): string {
     lines.push(
       `Konzeption & Produktion: ${formatPreis(prod)} €${f.type !== "sprachnachricht" ? " einmalig" : ""}`
     );
+    lines.push(`Schulvermarktung: ${formatPreis(svPreisFuerFormat(f.type, svGebiet))} € jährlich`);
   });
 
-  lines.push("");
-  lines.push(`Schulvermarktung: ${formatPreis(svGesamt)} € jährlich`);
   lines.push("");
   lines.push("Die Laufzeit der Schulvermarktung beträgt 12 Monate ab Fertigstellung des Mediums.");
   return lines.join("\n");

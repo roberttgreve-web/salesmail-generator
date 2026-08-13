@@ -16,19 +16,19 @@ export const PRODUKTION_PREISE: Record<FormatType, number> = {
 
 export type SvGebiet = "regional" | "bundesland" | "bundesweit";
 
-// Schulvermarktung wird additiv berechnet: Basispreis (immer enthalten, deckt
-// Sprachnachricht/Mini-Games ab) + ein Aufschlag pro zusätzlich gewähltem
-// Format (#kurzerklärt / 360-Grad / AR-Avatar).
-export const SV_BASIS_PREISE: Record<SvGebiet, number> = {
+// Schulvermarktung wird pro Format einzeln ausgewiesen: Sprachnachricht hat
+// einen eigenen (günstigeren) Preis, alle anderen Formate (#kurzerklärt /
+// 360-Grad / AR-Avatar) teilen sich denselben Preis.
+export const SV_PREISE_SPRACHNACHRICHT: Record<SvGebiet, number> = {
   regional: 3000,
   bundesland: 4500,
   bundesweit: 6000,
 };
 
-export const SV_ADDON_PREISE: Record<SvGebiet, number> = {
-  regional: 1500,
-  bundesland: 3000,
-  bundesweit: 4500,
+export const SV_PREISE_ANDERE: Record<SvGebiet, number> = {
+  regional: 4500,
+  bundesland: 7500,
+  bundesweit: 10500,
 };
 
 export const SV_GEBIET_LABELS: Record<SvGebiet, string> = {
@@ -127,7 +127,7 @@ export const DEFAULT_FORM: FormData = {
   personen: [{ vorname: "", nachname: "", geschlecht: "weiblich" }],
 
   formate: [
-    { type: "kurzerklart", beispielTitel: "", beispielLink: "" },
+    { type: "sprachnachricht", beispielTitel: "", beispielLink: "" },
   ],
 
   svGebiet: "regional",
