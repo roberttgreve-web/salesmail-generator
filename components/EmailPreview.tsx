@@ -19,7 +19,7 @@ const BOLD_HEADERS = new Set([
 ]);
 
 const BOLD_ITALIC_NAMES = new Set([
-  "Sprachnachricht / Mini-Games",
+  "Sprachnachricht",
   "#kurzerklärt",
   "360-Grad-Rundgang",
   "Augmented Reality-Avatar",

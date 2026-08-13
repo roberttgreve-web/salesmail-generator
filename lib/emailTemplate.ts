@@ -99,7 +99,7 @@ function buildBerufsmediumSection(formate: FormatData[], p: P): string {
   formate.forEach((f) => {
     if (f.type === "sprachnachricht") {
       lines.push(
-        `${bullet}Durch eine **Sprachnachricht** und interaktive **Mini-Games** wird ${p.IhrEuer} Beruf bei uns lebendig und authentisch dargestellt. Die Vertonung kann entweder direkt durch eine oder einen ${p.IhrerEurer} Auszubildenden erfolgen oder alternativ KI-gestützt produziert werden.`
+        `${bullet}Durch eine **Sprachnachricht** wird ${p.IhrEuer} Beruf bei uns lebendig und authentisch dargestellt. Die Vertonung kann entweder direkt durch eine oder einen ${p.IhrerEurer} Auszubildenden erfolgen oder alternativ KI-gestützt produziert werden. Darüber hinaus wird ${p.IhrEuer} Beruf in unseren **Mini-Games** und im **Azubi-Chat** erkundet und entdeckt.`
       );
       lines.push("");
     }

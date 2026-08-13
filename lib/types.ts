@@ -3,7 +3,7 @@ export type FormatType = "kurzerklart" | "360grad" | "sprachnachricht" | "ar-ava
 export const FORMAT_LABELS: Record<FormatType, string> = {
   kurzerklart: "#kurzerklärt",
   "360grad": "360-Grad-Rundgang",
-  sprachnachricht: "Sprachnachricht / Mini-Games",
+  sprachnachricht: "Sprachnachricht",
   "ar-avatar": "Augmented Reality-Avatar",
 };
 
