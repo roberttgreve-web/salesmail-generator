@@ -251,7 +251,7 @@ function buildKostenSection(formate: FormatData[], svGebiet: SvGebiet): string {
     if (showFormatName) lines.push(FORMAT_LABELS[f.type]);
     const prod = PRODUKTION_PREISE[f.type];
     lines.push(
-      `Konzeption & Produktion: ${formatPreis(prod)} €${f.type !== "sprachnachricht" ? " einmalig" : ""}`
+      `Konzeption & Produktion: ${formatPreis(prod)} €${prod > 0 ? " einmalig" : ""}`
     );
     lines.push(`Schulvermarktung: ${formatPreis(svPreisFuerFormat(f.type, svGebiet))} € jährlich`);
   });
