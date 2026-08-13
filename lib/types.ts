@@ -11,7 +11,7 @@ export const PRODUKTION_PREISE: Record<FormatType, number> = {
   kurzerklart: 4900,
   "360grad": 14900,
   sprachnachricht: 0,
-  "ar-avatar": 1500,
+  "ar-avatar": 0,
 };
 
 export type SvGebiet = "regional" | "bundesland" | "bundesweit";
