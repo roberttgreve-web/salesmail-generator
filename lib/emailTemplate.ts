@@ -257,7 +257,7 @@ function buildKostenSection(formate: FormatData[], svGebiet: SvGebiet): string {
   });
 
   lines.push("");
-  lines.push("Die Laufzeit der Schulvermarktung beträgt 12 Monate ab Fertigstellung des Mediums.");
+  lines.push("Die Laufzeit der Schulvermarktung beträgt 12 Monate.");
   return lines.join("\n");
 }
 
