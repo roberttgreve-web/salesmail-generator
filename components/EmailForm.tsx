@@ -15,7 +15,7 @@ import {
 } from "@/lib/types";
 
 
-const FORMAT_OPTIONS: FormatType[] = ["sprachnachricht", "kurzerklart", "360grad", "ar-avatar"];
+const FORMAT_OPTIONS: FormatType[] = ["sprachnachricht", "ar-avatar", "kurzerklart", "360grad"];
 
 interface Props {
   data: FormData;
